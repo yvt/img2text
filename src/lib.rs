@@ -137,6 +137,7 @@ pub fn num_lines_for_image_height(height: usize, opts: &Bmp2textOpts) -> usize {
     let mask_overlap = opts.glyph_set.mask_overlap();
     height.saturating_sub(mask_overlap[1]) / (mask_dims[1] - mask_overlap[1])
 }
+
 /// Calculate the maximum number of bytes possibly outputted by
 /// [`Bmp2text::transform_and_write`].
 pub fn max_output_len_for_image_dims(
