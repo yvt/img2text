@@ -4,7 +4,26 @@ use std::{convert::TryInto, path::PathBuf};
 #[derive(Clap, Debug)]
 struct Opts {
     /// The image to process
-    pub image_path: PathBuf,
+    image_path: PathBuf,
+    #[clap(short = 's', default_value = "slc-full", arg_enum)]
+    style: Style,
+}
+
+#[derive(Clap, Debug)]
+enum Style {
+    SlcFull,
+    Blocks2x2,
+    Blocks2x3,
+}
+
+impl Style {
+    fn glyph_set(&self) -> &dyn img2text::GlyphSet {
+        match self {
+            Self::SlcFull => img2text::GLYPH_SET_SLC_FULL,
+            Self::Blocks2x2 => img2text::GLYPH_SET_2X2,
+            Self::Blocks2x3 => img2text::GLYPH_SET_2X3,
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,7 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let img = img.into_luma8();
 
     // Options
-    let b2t_opts = img2text::Bmp2textOpts::new();
+    let mut b2t_opts = img2text::Bmp2textOpts::new();
+    b2t_opts.glyph_set = opts.style.glyph_set();
 
     // Process the image
     use img2text::ImageRead;

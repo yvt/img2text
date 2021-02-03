@@ -33,7 +33,7 @@ impl Default for Bmp2textOpts<'_> {
 impl Bmp2textOpts<'_> {
     pub fn new() -> Self {
         Self {
-            glyph_set: GLYPH_SET_DEFAULT,
+            glyph_set: GLYPH_SET_SLC_FULL,
         }
     }
 }
