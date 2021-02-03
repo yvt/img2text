@@ -17,6 +17,13 @@ edition = "2018"
 default = ["bin"]
 
 # `bin`-only deps
-bin = []
+bin = [
+    "env_logger",
+    "clap",
+    "log",
+]
 
 [dependencies]
+env_logger = { version = "0.8.1", optional = true }
+clap = { version = "3.0.0-beta.2", features = ["wrap_help"], optional = true }
+log = { version = "0.4.11", optional = true }
