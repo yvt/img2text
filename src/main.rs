@@ -18,15 +18,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let img = image::open(&opts.image_path)?;
     let img = img.into_luma8();
 
+    // Options
+    let b2t_opts = img2text::Bmp2textOpts::new();
+
     // Process the image
     use img2text::ImageRead;
     let img_proxy = GrayImageRead(&img);
     let mut out_buffer = String::with_capacity(
-        img2text::max_output_len_for_image_dims(img_proxy.dims()).expect("image is too large"),
+        img2text::max_output_len_for_image_dims(img_proxy.dims(), &b2t_opts)
+            .expect("image is too large"),
     );
 
     img2text::Bmp2text::new()
-        .transform_and_write(&img_proxy, &mut out_buffer)
+        .transform_and_write(&img_proxy, &b2t_opts, &mut out_buffer)
         .unwrap();
 
     print!("{}", out_buffer);
