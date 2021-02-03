@@ -138,6 +138,12 @@ fn mutate_fragment_by_dilation_and_erosion(
         for x in 0..w {
             let cur = frag.get_bit(i);
 
+            // Deny dilation (the outcome is opposite - the result image will
+            // be dilated)
+            if cur {
+                continue;
+            }
+
             // try copying this pixel to a neighboring one
             for &(sx, sy) in &[(-1isize, 0), (1, 0), (0, -1isize), (0, 1)] {
                 let nx = x.wrapping_add(sx as usize);
