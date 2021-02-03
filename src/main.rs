@@ -1,13 +1,22 @@
 use clap::{Clap, ValueHint};
-use std::{convert::TryInto, path::PathBuf};
+use std::{convert::TryInto, path::PathBuf, str::FromStr};
 
 #[derive(Clap, Debug)]
 struct Opts {
     /// The image to process
     #[clap(name = "FILE", value_hint = ValueHint::AnyPath)]
     image_path: PathBuf,
-    #[clap(short = 's', default_value = "slc", arg_enum)]
+    /// The glyph set to use
+    #[clap(short = 'g', default_value = "slc", arg_enum)]
     style: Style,
+    /// The width of output characters, only used when `-s` is given without
+    /// `!`
+    #[clap(short = 'w', default_value = "0.45")]
+    cell_width: f64,
+    /// The output size. 80 => fit within 80x80; 80x40 => fit within 80x40;
+    /// 80x40! => fit to 80x40, not maintaining the aspect ratio
+    #[clap(short = 's')]
+    out_size: Option<SizeSpec>,
 }
 
 #[derive(Clap, Debug)]
@@ -29,6 +38,45 @@ impl Style {
     }
 }
 
+#[derive(Debug)]
+struct SizeSpec {
+    dims: [usize; 2],
+    force: bool,
+}
+
+impl FromStr for SizeSpec {
+    type Err = String;
+
+    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        let force = if let Some(rest) = s.strip_suffix("!") {
+            s = rest;
+            true
+        } else {
+            false
+        };
+
+        let dims = if let Some(i) = s.find("x") {
+            // width x height
+            let width = &s[0..i];
+            let height = &s[i + 1..];
+            [
+                width
+                    .parse()
+                    .map_err(|_| format!("bad width: '{}'", width))?,
+                height
+                    .parse()
+                    .map_err(|_| format!("bad height: '{}'", height))?,
+            ]
+        } else {
+            // size
+            let size = s.parse().map_err(|_| format!("bad size: '{}'", s))?;
+            [size, size]
+        };
+
+        Ok(Self { dims, force })
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("img2text=info"))
         .init();
@@ -38,11 +86,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Open the image
     let img = image::open(&opts.image_path)?;
-    let img = img.into_luma8();
+    let mut img = img.into_luma8();
 
     // Options
     let mut b2t_opts = img2text::Bmp2textOpts::new();
     b2t_opts.glyph_set = opts.style.glyph_set();
+
+    if !opts.cell_width.is_finite() || opts.cell_width <= 0.1 || opts.cell_width > 10.0 {
+        panic!("cell_width is out of range");
+    }
+
+    // Resize the image if requested
+    if let Some(out_size) = &opts.out_size {
+        let new_dims = if out_size.force {
+            out_size.dims
+        } else {
+            let [img_w, img_h] = [img.width() as f64, img.height() as f64 * opts.cell_width];
+            let scale_x = out_size.dims[0] as f64 / img_w;
+            let scale_y = out_size.dims[1] as f64 / img_h;
+
+            if scale_x < scale_y {
+                [out_size.dims[0], (img_h * scale_x).round() as usize]
+            } else {
+                [(img_w * scale_y).round() as usize, out_size.dims[1]]
+            }
+        };
+
+        let mask_dims = b2t_opts.glyph_set.mask_dims();
+        let mask_overlap = b2t_opts.glyph_set.mask_overlap();
+
+        // FIXME: Waiting for `try` blocks
+        let in_dims = (|| {
+            Some([
+                new_dims[0]
+                    .checked_mul(mask_dims[0] - mask_overlap[0])?
+                    .checked_add(mask_overlap[0])?
+                    .try_into()
+                    .ok()?,
+                new_dims[1]
+                    .checked_mul(mask_dims[1] - mask_overlap[1])?
+                    .checked_add(mask_overlap[1])?
+                    .try_into()
+                    .ok()?,
+            ])
+        })()
+        .expect("requested size is too large");
+
+        img = image::imageops::resize(
+            &img,
+            in_dims[0],
+            in_dims[1],
+            image::imageops::FilterType::CatmullRom,
+        );
+    }
 
     // Process the image
     use img2text::ImageRead;
