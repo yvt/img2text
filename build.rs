@@ -115,6 +115,11 @@ fn process_one_glyph_set(glyphsets_rs: &mut String, gs: &GlyphSetIn) {
         gs.mask_dims[0],
         gs.mask_dims[1]
     );
+    wl!(
+        "        mask_overlap: [{}, {}],",
+        gs.mask_overlap[0],
+        gs.mask_overlap[1]
+    );
     wl!("        max_glyph_len: {},", max_glyph_len);
     wl!("        index: &[");
     for ent in index.iter() {
@@ -177,7 +182,12 @@ fn mutate_fragment_unconditional([w, h]: [usize; 2], frag: Fragment, mut cb: imp
     }
 }
 
-const GLYPH_SETS: &[&GlyphSetIn] = &[&GLYPH_SET_SLC, &GLYPH_SET_2X2, &GLYPH_SET_2X3];
+const GLYPH_SETS: &[&GlyphSetIn] = &[
+    &GLYPH_SET_SLC,
+    &GLYPH_SET_SLC2,
+    &GLYPH_SET_2X2,
+    &GLYPH_SET_2X3,
+];
 
 /// A small bitmap image, whose dimensions are specified implciitly (e.g., by
 /// `GlyphSetIn::mask_dims`).
@@ -186,6 +196,7 @@ type Fragment = u32;
 struct GlyphSetIn {
     const_name: &'static str,
     mask_dims: [usize; 2],
+    mask_overlap: [usize; 2],
     glyphs: &'static [(&'static str, Fragment)],
 }
 
@@ -199,6 +210,7 @@ fn decode_mask(mask: Fragment, mask_dims: [usize; 2]) -> Fragment {
 const GLYPH_SET_SLC: GlyphSetIn = GlyphSetIn {
     const_name: "GLYPH_SET_SLC",
     mask_dims: [3, 3],
+    mask_overlap: [0, 0],
     glyphs: &[
         (" ", 0b000_000_000),
         ("╋", 0b010_111_010),
@@ -269,9 +281,88 @@ const GLYPH_SET_SLC: GlyphSetIn = GlyphSetIn {
     ],
 };
 
+/// Follows the conservative rasterization pattern.
+///
+/// In the following diagram, the vertices marked with X are permitted, and
+/// those marked with S are the sampling points:
+///
+///   X──────X──────X   ┌──────┬──────┐
+///   │      │      │   │  S   S   S  │
+///   X──────X──────X   ├──────┼──────┤
+///   │      X      │   │  S   S   S  │
+///   X──────X──────X   ├──────┼──────┤
+///   │      │      │   │  S   S   S  │
+///   X──────X──────X   └──────┴──────┘
+///
+const GLYPH_SET_SLC2: GlyphSetIn = GlyphSetIn {
+    const_name: "GLYPH_SET_SLC2",
+    mask_dims: [3, 3],
+    mask_overlap: [1, 1],
+    glyphs: &[
+        (" ", 0b000_000_000),
+        ("🬃", 0b000_110_000),
+        ("🬇", 0b000_011_000),
+        ("█", 0b111_111_111),
+        ("🬀", 0b110_000_000),
+        ("🬁", 0b011_000_000),
+        ("🬂", 0b111_000_000),
+        ("🬋", 0b000_111_000),
+        ("🬎", 0b111_111_000),
+        ("🬏", 0b000_000_110),
+        ("🬞", 0b000_000_011),
+        ("🬭", 0b000_000_111),
+        ("🬰", 0b111_000_111),
+        ("🬹", 0b000_111_111),
+        ("🬼", 0b000_000_100),
+        ("🬽", 0b000_000_110),
+        // ("🬾", 0b000_000_100),
+        ("🬿", 0b000_100_110),
+        ("🭀", 0b000_100_100),
+        ("🭁", 0b011_111_111),
+        // ("🭂", 0b011_111_111),
+        ("🭄", 0b001_011_111),
+        // ("🭃", 0b011_111_111),
+        // ("🭅", 0b011_111_111),
+        ("🭆", 0b000_011_111),
+        ("🭇", 0b000_000_001),
+        // ("🭉", 0b000_000_001),
+        ("🭌", 0b110_111_111),
+        // ("🭍", 0b110_111_111),
+        // ("🭐", 0b110_111_111),
+        ("🭑", 0b000_110_111),
+        ("🭒", 0b111_111_011),
+        // ("🭓", 0b111_111_011),
+        // ("🭖", 0b111_111_011),
+        ("🭕", 0b111_011_001),
+        ("🭗", 0b100_000_000),
+        // ("🭙", 0b100_000_000),
+        ("🭜", 0b111_110_000),
+        ("🭝", 0b111_111_110),
+        // ("🭞", 0b111_111_110),
+        // ("🭡", 0b111_111_110),
+        ("🭠", 0b111_110_100),
+        ("🭢", 0b001_000_000),
+        // ("🭤", 0b001_000_000),
+        ("🭧", 0b111_011_000),
+        ("🭨", 0b111_011_111),
+        ("🭩", 0b101_111_111),
+        ("🭪", 0b111_110_111),
+        ("🭫", 0b111_111_101),
+        ("🭬", 0b100_110_100),
+        ("🭭", 0b111_010_000),
+        ("🭮", 0b001_011_001),
+        ("🭯", 0b000_010_111),
+        ("🮚", 0b111_010_111),
+        ("🮛", 0b101_111_101),
+        ("▌", 0b110_110_110),
+        ("▐", 0b011_011_011),
+    ],
+};
+
 const GLYPH_SET_2X2: GlyphSetIn = GlyphSetIn {
     const_name: "GLYPH_SET_2X2",
     mask_dims: [2, 2],
+    mask_overlap: [0, 0],
     glyphs: &[
         ("█", 0b11_11),
         ("▖", 0b00_10),
@@ -295,6 +386,7 @@ const GLYPH_SET_2X2: GlyphSetIn = GlyphSetIn {
 const GLYPH_SET_2X3: GlyphSetIn = GlyphSetIn {
     const_name: "GLYPH_SET_2X3",
     mask_dims: [2, 3],
+    mask_overlap: [0, 0],
     glyphs: &[
         ("█", 0b11_11_11),
         (" ", 0b00_00_00),

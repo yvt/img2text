@@ -59,10 +59,14 @@ impl Bmp2text {
 
         let glyph_set = opts.glyph_set;
         let mask_dims = glyph_set.mask_dims();
+        let mask_overlap = glyph_set.mask_overlap();
 
         let [img_w, img_h] = image.dims();
         let num_spans_per_line = (img_w + SPAN_BITS - 1) / SPAN_BITS;
-        let [out_w, out_h] = [img_w / mask_dims[0], img_h / mask_dims[1]];
+        let [out_w, out_h] = [
+            num_glyphs_for_image_width(img_w, opts),
+            num_lines_for_image_height(img_h, opts),
+        ];
 
         let num_spans_per_line_extra = num_spans_per_line + 1;
         self.row_group
@@ -84,7 +88,7 @@ impl Bmp2text {
         for out_y in 0..out_h {
             // Read a row group from the input image
             for (y, row) in row_group.iter_mut().enumerate() {
-                image.copy_line_as_spans_to(out_y * mask_dims[1] + y, row);
+                image.copy_line_as_spans_to(out_y * (mask_dims[1] - mask_overlap[1]) + y, row);
             }
 
             let mut num_valid_bits = 0; // .. in `RowState::bits`
@@ -105,9 +109,9 @@ impl Bmp2text {
                     fragment |= (row_state.bits as Fragment & Fragment::ones(0..mask_dims[0] as _))
                         << (i * mask_dims[0]);
 
-                    row_state.bits >>= mask_dims[0];
+                    row_state.bits >>= mask_dims[0] - mask_overlap[0];
                 }
-                num_valid_bits -= mask_dims[0];
+                num_valid_bits -= mask_dims[0] - mask_overlap[0];
 
                 debug_assert!(fragment < (1 << (mask_dims[0] * mask_dims[1])));
 
@@ -122,6 +126,17 @@ impl Bmp2text {
     }
 }
 
+pub fn num_glyphs_for_image_width(width: usize, opts: &Bmp2textOpts) -> usize {
+    let mask_dims = opts.glyph_set.mask_dims();
+    let mask_overlap = opts.glyph_set.mask_overlap();
+    width.saturating_sub(mask_overlap[0]) / (mask_dims[0] - mask_overlap[0])
+}
+
+pub fn num_lines_for_image_height(height: usize, opts: &Bmp2textOpts) -> usize {
+    let mask_dims = opts.glyph_set.mask_dims();
+    let mask_overlap = opts.glyph_set.mask_overlap();
+    height.saturating_sub(mask_overlap[1]) / (mask_dims[1] - mask_overlap[1])
+}
 /// Calculate the maximum number of bytes possibly outputted by
 /// [`Bmp2text::transform_and_write`].
 pub fn max_output_len_for_image_dims(
@@ -129,8 +144,8 @@ pub fn max_output_len_for_image_dims(
     opts: &Bmp2textOpts,
 ) -> Option<usize> {
     let glyph_set = opts.glyph_set;
-    (width / glyph_set.mask_dims()[0])
-        .checked_mul(opts.glyph_set.max_glyph_len())
+    num_glyphs_for_image_width(width, opts)
+        .checked_mul(glyph_set.max_glyph_len())
         .and_then(|x| x.checked_add(1)) // line termination
-        .and_then(|x| x.checked_mul(height / glyph_set.mask_dims()[1]))
+        .and_then(|x| x.checked_mul(num_lines_for_image_height(height, opts)))
 }

@@ -6,6 +6,7 @@ use crate::Fragment;
 /// **This trait's methods are exempt from the API stability guarantee.**
 pub trait GlyphSet {
     fn mask_dims(&self) -> [usize; 2];
+    fn mask_overlap(&self) -> [usize; 2];
     fn fragment_to_glyph(&self, fragment: Fragment) -> &str;
     fn max_glyph_len(&self) -> usize;
 }
@@ -14,6 +15,7 @@ include!(concat!(env!("OUT_DIR"), "/glyphsets.rs"));
 
 struct IndexedGlyphSet {
     mask_dims: [usize; 2],
+    mask_overlap: [usize; 2],
     max_glyph_len: usize,
     index: &'static [&'static str],
 }
@@ -21,6 +23,10 @@ struct IndexedGlyphSet {
 impl GlyphSet for IndexedGlyphSet {
     fn mask_dims(&self) -> [usize; 2] {
         self.mask_dims
+    }
+
+    fn mask_overlap(&self) -> [usize; 2] {
+        self.mask_overlap
     }
 
     fn fragment_to_glyph(&self, fragment: u64) -> &str {
