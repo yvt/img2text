@@ -177,7 +177,7 @@ fn mutate_fragment_unconditional([w, h]: [usize; 2], frag: Fragment, mut cb: imp
     }
 }
 
-const GLYPH_SETS: &[&GlyphSetIn] = &[&GLYPH_SET_SLC_FULL, &GLYPH_SET_2X2, &GLYPH_SET_2X3];
+const GLYPH_SETS: &[&GlyphSetIn] = &[&GLYPH_SET_SLC, &GLYPH_SET_2X2, &GLYPH_SET_2X3];
 
 /// A small bitmap image, whose dimensions are specified implciitly (e.g., by
 /// `GlyphSetIn::mask_dims`).
@@ -196,8 +196,8 @@ fn decode_mask(mask: Fragment, mask_dims: [usize; 2]) -> Fragment {
     mask.reverse_bits() >> (32 - (mask_dims[0] * mask_dims[1]))
 }
 
-const GLYPH_SET_SLC_FULL: GlyphSetIn = GlyphSetIn {
-    const_name: "GLYPH_SET_SLC_FULL",
+const GLYPH_SET_SLC: GlyphSetIn = GlyphSetIn {
+    const_name: "GLYPH_SET_SLC",
     mask_dims: [3, 3],
     glyphs: &[
         ("█", 0b111_111_111),

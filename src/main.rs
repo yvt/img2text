@@ -1,17 +1,18 @@
-use clap::Clap;
+use clap::{Clap, ValueHint};
 use std::{convert::TryInto, path::PathBuf};
 
 #[derive(Clap, Debug)]
 struct Opts {
     /// The image to process
+    #[clap(name = "FILE", value_hint = ValueHint::AnyPath)]
     image_path: PathBuf,
-    #[clap(short = 's', default_value = "slc-full", arg_enum)]
+    #[clap(short = 's', default_value = "slc", arg_enum)]
     style: Style,
 }
 
 #[derive(Clap, Debug)]
 enum Style {
-    SlcFull,
+    Slc,
     Blocks2x2,
     Blocks2x3,
 }
@@ -19,7 +20,7 @@ enum Style {
 impl Style {
     fn glyph_set(&self) -> &dyn img2text::GlyphSet {
         match self {
-            Self::SlcFull => img2text::GLYPH_SET_SLC_FULL,
+            Self::Slc => img2text::GLYPH_SET_SLC,
             Self::Blocks2x2 => img2text::GLYPH_SET_2X2,
             Self::Blocks2x3 => img2text::GLYPH_SET_2X3,
         }
