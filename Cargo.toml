@@ -1,5 +1,22 @@
-[workspace]
-members = [
-    "src/bmp2text",
-    "src/img2text",
-]
+[package]
+name = "img2text"
+version = "0.1.0"
+authors = ["yvt <i@yvt.jp>"]
+edition = "2018"
+
+[features]
+# Enable the `bin`-only deps to facilitate `cargo install`, at cost of
+# making it more tedious to use the package as a library. The following are the
+# RFCs that will solve this problem:
+#
+#  - [Allow specifying dependencies for individual artifacts]
+#    (https://github.com/rust-lang/rfcs/pull/2887)
+#  - [Allow specifying features of the implicit lib dependency]
+#    (https://github.com/rust-lang/rfcs/pull/3020)
+#
+default = ["bin"]
+
+# `bin`-only deps
+bin = []
+
+[dependencies]

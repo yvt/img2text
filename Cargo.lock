@@ -3,7 +3,3 @@
 [[package]]
 name = "bmp2text"
 version = "0.1.0"
-
-[[package]]
-name = "img2text"
-version = "0.1.0"
