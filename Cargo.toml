@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/bmp2text",
+    "src/img2text",
+]
