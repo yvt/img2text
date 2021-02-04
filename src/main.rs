@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use clap::{Clap, ValueHint};
-use std::{convert::TryInto, io::prelude::*, path::PathBuf, str::FromStr};
+use std::{convert::TryInto, io::prelude::*, path::PathBuf, str::FromStr, unreachable};
 
 mod otsu;
 
@@ -95,7 +95,7 @@ impl Style {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Clap, Debug, PartialEq)]
 enum InputTy {
     /// Automatic detection
     Auto,
@@ -357,14 +357,41 @@ fn main() -> Result<()> {
     };
 
     // black-on-white/white-on-black detection
+    let omega0: u32 = histogram[..threshold].iter().sum();
+    let omega1: u32 = histogram[threshold..].iter().sum();
+    if opts.input_ty == InputTy::Auto {
+        let omega_min = omega0.min(omega1);
+        let omega_max = omega0.max(omega1);
+        log::debug!("[omega_min, omega_max] = {:?}", [omega_min, omega_max]);
+
+        // TODO: probably should take line thickness into account when detecting
+        //       line art
+        opts.input_ty = if omega_min * 4 > omega_max {
+            log::debug!(
+                "there are roughly the same numbers of black and white \
+                pixels. this indicates the input image is not a line art, so \
+                we will use `edge-canny` (the Canny edge detector)."
+            );
+            InputTy::EdgeCanny
+        } else {
+            log::debug!(
+                "the numbers of black and white pixels are remarkably different.
+                this indicates the input image is a line art, so \
+                we will not use the edge detector."
+            );
+            if omega1 > omega0 {
+                InputTy::Bow
+            } else {
+                InputTy::Wob
+            }
+        };
+        log::debug!("guessed input_ty = {:?}", opts.input_ty);
+    }
+
     let invert = match opts.input_ty {
         InputTy::Bow => true,
         InputTy::Wob => false,
-        InputTy::Auto => {
-            let omega0: u32 = histogram[..threshold].iter().sum();
-            let omega1: u32 = histogram[threshold..].iter().sum();
-            omega1 > omega0
-        }
+        InputTy::Auto => unreachable!(),
         InputTy::EdgeCanny => {
             if img.width() != 0 && img.height() != 0 {
                 img = imageproc::edges::canny(
