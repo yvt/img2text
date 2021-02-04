@@ -16,8 +16,24 @@ struct Opts {
     /// `!`
     #[clap(short = 'w', default_value = "0.45")]
     cell_width: f64,
-    /// The output size. 80 => fit within 80x80; 80x40 => fit within 80x40;
-    /// 80x40! => fit to 80x40, not maintaining the aspect ratio
+    /// The output size, measured in character cells or percents (e.g., `80`,
+    /// `80x40`, `80x40!`, `-80x40`, `100%`).
+    /// [default: downscale to terminal size (if the output is a terminal) or
+    /// 100% (otherwise)]
+    ///
+    ///  - 80: Fit within 80x80 character cells
+    ///
+    ///  - 80x40: Fit within 80x40 character cells, upscaling as necessary
+    ///
+    ///  - -80x40: Fit within 80x40 character cells, only downscaling
+    ///
+    ///  - 80x40!: Fit to 80x40 character cells, not maintaining the aspect
+    ///    ratio
+    ///
+    ///  - 150%: Scale by 150%. The actual output size depends on the glyph set
+    ///    being used; for example, `blocks2x3` maps each 2x3 block to one
+    ///    character.
+    ///
     #[clap(short = 's')]
     out_size: Option<SizeSpec>,
 
@@ -72,16 +88,40 @@ enum InputTy {
 }
 
 #[derive(Debug)]
-struct SizeSpec {
-    dims: [usize; 2],
-    force: bool,
+enum SizeSpec {
+    Absolute { dims: [usize; 2], mode: SizeMode },
+    Relative(f64),
+}
+
+#[derive(Debug, PartialEq)]
+enum SizeMode {
+    Contain,
+    Fill,
+    ScaleDown,
 }
 
 impl FromStr for SizeSpec {
     type Err = String;
 
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        if let Some(rest) = s.strip_suffix("%") {
+            let ratio: f64 = rest.parse().map_err(|_| format!("bad ratio: '{}'", rest))?;
+
+            if !ratio.is_finite() || ratio < 0.0 {
+                return Err(format!("ratio out of range: '{}'", rest));
+            }
+
+            return Ok(Self::Relative(ratio));
+        }
+
         let force = if let Some(rest) = s.strip_suffix("!") {
+            s = rest;
+            true
+        } else {
+            false
+        };
+
+        let scale_down = if let Some(rest) = s.strip_prefix("-") {
             s = rest;
             true
         } else {
@@ -106,7 +146,15 @@ impl FromStr for SizeSpec {
             [size, size]
         };
 
-        Ok(Self { dims, force })
+        Ok(Self::Absolute {
+            dims,
+            mode: match (force, scale_down) {
+                (true, false) => SizeMode::Fill,
+                (false, true) => SizeMode::ScaleDown,
+                (false, false) => SizeMode::Contain,
+                (true, true) => return Err("cannot specify both `!` and `-`".to_owned()),
+            },
+        })
     }
 }
 
@@ -114,7 +162,7 @@ fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("img2text=info"))
         .init();
 
-    let opts: Opts = Clap::parse();
+    let mut opts: Opts = Clap::parse();
     log::debug!("opts = {:#?}", opts);
 
     // Open the image
@@ -152,41 +200,100 @@ fn main() -> Result<()> {
         bail!("edge_canny_low_threshold mustn't be greater than edge_canny_high_threshold");
     }
 
+    // Resize the image to the terminal size if the size is not specified
+    let console_stdout = console::Term::stdout();
+    if opts.out_size.is_none() && console_stdout.features().is_attended() {
+        if let Some((h, w)) = console_stdout.size_checked() {
+            let h = h.saturating_sub(3);
+            log::info!(
+                "downscaling to `{}x{}` (tty size minus some) because stdout is tty, and `-s` is unspecified",
+                w,
+                h
+            );
+            opts.out_size = Some(SizeSpec::Absolute {
+                mode: SizeMode::ScaleDown,
+                dims: [w as _, h as _],
+            });
+        }
+    }
+
     // Resize the image if requested
     if let Some(out_size) = &opts.out_size {
-        let new_dims = if out_size.force {
-            out_size.dims
-        } else {
-            let [img_w, img_h] = [img.width() as f64, img.height() as f64 * opts.cell_width];
-            let scale_x = out_size.dims[0] as f64 / img_w;
-            let scale_y = out_size.dims[1] as f64 / img_h;
+        let in_dims = match out_size {
+            SizeSpec::Absolute { dims, mode } => {
+                let mask_dims = b2t_opts.glyph_set.mask_dims();
+                let mask_overlap = b2t_opts.glyph_set.mask_overlap();
 
-            if scale_x < scale_y {
-                [out_size.dims[0], (img_h * scale_x).round() as usize]
-            } else {
-                [(img_w * scale_y).round() as usize, out_size.dims[1]]
+                // `out_dims`: measured in character cells
+                let out_dims = if *mode == SizeMode::Fill {
+                    *dims
+                } else {
+                    // Calculate the "natural" size
+                    let [nat_out_w, nat_out_h] = [
+                        img2text::num_glyphs_for_image_width(img.width() as _, &b2t_opts),
+                        img2text::num_lines_for_image_height(img.height() as _, &b2t_opts),
+                    ];
+                    let aspect = (mask_dims[1] - mask_overlap[1]) as f64
+                        / (mask_dims[0] - mask_overlap[0]) as f64
+                        * opts.cell_width;
+
+                    let [img_w, img_h] = [
+                        nat_out_w as f64 / aspect.max(1.0),
+                        nat_out_h as f64 * aspect.min(1.0),
+                    ];
+                    log::debug!("'natural' output size = {:?}", [img_w, img_h]);
+                    let scale_x = dims[0] as f64 / img_w;
+                    let scale_y = dims[1] as f64 / img_h;
+
+                    let mut scale = f64::min(scale_x, scale_y);
+                    if *mode == SizeMode::ScaleDown {
+                        scale = scale.min(1.0);
+                    }
+                    log::debug!("scaling the 'natural' output size by {}...", scale);
+
+                    [
+                        (img_w * scale).round() as usize,
+                        (img_h * scale).round() as usize,
+                    ]
+                };
+
+                log::debug!("output size goal = {:?}", out_dims);
+
+                // FIXME: Waiting for `try` blocks
+                (|| {
+                    Some([
+                        out_dims[0]
+                            .checked_mul(mask_dims[0] - mask_overlap[0])?
+                            .checked_add(mask_overlap[0])?
+                            .try_into()
+                            .ok()?,
+                        out_dims[1]
+                            .checked_mul(mask_dims[1] - mask_overlap[1])?
+                            .checked_add(mask_overlap[1])?
+                            .try_into()
+                            .ok()?,
+                    ])
+                })()
+                .ok_or_else(|| anyhow!("requested size is too large"))?
+            }
+            SizeSpec::Relative(ratio) => {
+                let w = img.width() as f64 * ratio;
+                let h = img.height() as f64 * ratio;
+                if w > u32::MAX as f64 || h > u32::MAX as f64 {
+                    bail!("requested size is too large");
+                }
+                // FIXME: Waiting for `try` blocks
+                [w as _, h as _]
             }
         };
 
-        let mask_dims = b2t_opts.glyph_set.mask_dims();
-        let mask_overlap = b2t_opts.glyph_set.mask_overlap();
-
-        // FIXME: Waiting for `try` blocks
-        let in_dims = (|| {
-            Some([
-                new_dims[0]
-                    .checked_mul(mask_dims[0] - mask_overlap[0])?
-                    .checked_add(mask_overlap[0])?
-                    .try_into()
-                    .ok()?,
-                new_dims[1]
-                    .checked_mul(mask_dims[1] - mask_overlap[1])?
-                    .checked_add(mask_overlap[1])?
-                    .try_into()
-                    .ok()?,
-            ])
-        })()
-        .ok_or_else(|| anyhow!("requested size is too large"))?;
+        log::debug!(
+            "resampling the image from {:?} to {:?}",
+            match img.dimensions() {
+                (x, y) => [x, y],
+            },
+            in_dims
+        );
 
         img = image::imageops::resize(
             &img,
@@ -195,6 +302,17 @@ fn main() -> Result<()> {
             image::imageops::FilterType::CatmullRom,
         );
     }
+
+    log::debug!(
+        "expected output size for image of size {:?} is {:?}",
+        match img.dimensions() {
+            (x, y) => [x, y],
+        },
+        [
+            img2text::num_glyphs_for_image_width(img.width() as _, &b2t_opts),
+            img2text::num_lines_for_image_height(img.height() as _, &b2t_opts),
+        ]
+    );
 
     // Auto-threshold
     let mut histogram = [0; 256];
