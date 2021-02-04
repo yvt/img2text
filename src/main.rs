@@ -1,5 +1,6 @@
+use anyhow::{anyhow, bail, Context, Result};
 use clap::{Clap, ValueHint};
-use std::{convert::TryInto, path::PathBuf, str::FromStr};
+use std::{convert::TryInto, io::prelude::*, path::PathBuf, str::FromStr};
 
 mod otsu;
 
@@ -109,7 +110,7 @@ impl FromStr for SizeSpec {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("img2text=info"))
         .init();
 
@@ -117,7 +118,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log::debug!("opts = {:#?}", opts);
 
     // Open the image
-    let img = image::open(&opts.image_path)?;
+    let img = image::open(&opts.image_path).with_context(|| {
+        format!(
+            "Failed to read an input image from '{}'",
+            opts.image_path.display()
+        )
+    })?;
     let mut img = img.into_luma8();
 
     // Options
@@ -125,25 +131,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     b2t_opts.glyph_set = opts.style.glyph_set();
 
     if !opts.cell_width.is_finite() || opts.cell_width <= 0.1 || opts.cell_width > 10.0 {
-        panic!("cell_width is out of range");
+        bail!("cell_width is out of range");
     }
 
     if !opts.edge_canny_low_threshold.is_finite()
         || opts.edge_canny_low_threshold <= 0.0
         || opts.edge_canny_low_threshold > 1150.0
     {
-        panic!("edge_canny_low_threshold is out of range");
+        bail!("edge_canny_low_threshold is out of range");
     }
 
     if !opts.edge_canny_high_threshold.is_finite()
         || opts.edge_canny_high_threshold <= 0.0
         || opts.edge_canny_high_threshold > 1150.0
     {
-        panic!("edge_canny_high_threshold is out of range");
+        bail!("edge_canny_high_threshold is out of range");
     }
 
     if opts.edge_canny_low_threshold > opts.edge_canny_high_threshold {
-        panic!("edge_canny_low_threshold mustn't be greater than edge_canny_high_threshold");
+        bail!("edge_canny_low_threshold mustn't be greater than edge_canny_high_threshold");
     }
 
     // Resize the image if requested
@@ -180,7 +186,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .ok()?,
             ])
         })()
-        .expect("requested size is too large");
+        .ok_or_else(|| anyhow!("requested size is too large"))?;
 
         img = image::imageops::resize(
             &img,
@@ -233,14 +239,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut out_buffer = String::with_capacity(
         img2text::max_output_len_for_image_dims(img_proxy.dims(), &b2t_opts)
-            .expect("image is too large"),
+            .ok_or_else(|| anyhow!("image is too large"))?,
     );
 
     img2text::Bmp2text::new()
         .transform_and_write(&img_proxy, &b2t_opts, &mut out_buffer)
         .unwrap();
 
-    print!("{}", out_buffer);
+    std::io::stdout()
+        .write(out_buffer.as_bytes())
+        .with_context(|| "Failed to write the output to the standard output")?;
 
     Ok(())
 }
