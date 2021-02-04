@@ -183,7 +183,7 @@ fn mutate_fragment_by_dilation_and_erosion(
 /// Mutate a fragment differently.
 fn mutate_fragment_unconditional([w, h]: [usize; 2], frag: Fragment, mut cb: impl FnMut(Fragment)) {
     for i in 0..w * h {
-        cb(frag ^ (1 << i));
+        cb(frag & !(1 << i));
     }
 }
 
