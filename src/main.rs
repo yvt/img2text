@@ -57,6 +57,8 @@ struct Opts {
 enum Style {
     Slc,
     Ms2x3,
+    _1x1,
+    _1x2,
     _2x2,
     _2x3,
     Braille,
@@ -67,6 +69,8 @@ impl Style {
         match self {
             Self::Slc => img2text::GLYPH_SET_SLC,
             Self::Ms2x3 => img2text::GLYPH_SET_MS_2X3,
+            Self::_1x1 => img2text::GLYPH_SET_1X1,
+            Self::_1x2 => img2text::GLYPH_SET_1X2,
             Self::_2x2 => img2text::GLYPH_SET_2X2,
             Self::_2x3 => img2text::GLYPH_SET_2X3,
             Self::Braille => img2text::GLYPH_SET_BRAILLE8,
