@@ -307,20 +307,27 @@ fn main() -> Result<()> {
             }
         };
 
-        log::debug!(
-            "resampling the image from {:?} to {:?}",
-            match img.dimensions() {
-                (x, y) => [x, y],
-            },
-            in_dims
-        );
+        if img.dimensions() != (in_dims[0], in_dims[1]) {
+            log::debug!(
+                "resampling the image from {:?} to {:?}",
+                match img.dimensions() {
+                    (x, y) => [x, y],
+                },
+                in_dims
+            );
 
-        img = image::imageops::resize(
-            &img,
-            in_dims[0],
-            in_dims[1],
-            image::imageops::FilterType::CatmullRom,
-        );
+            img = image::imageops::resize(
+                &img,
+                in_dims[0],
+                in_dims[1],
+                image::imageops::FilterType::CatmullRom,
+            );
+        } else {
+            log::debug!(
+                "refusing to resample the image to the identical size ({:?})",
+                in_dims
+            );
+        }
     }
 
     log::debug!(
