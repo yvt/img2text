@@ -31,7 +31,7 @@ struct Opts {
     /// `!`
     #[clap(short = 'w', default_value = "0.45")]
     cell_width: f64,
-    /// The output size, measured in character cells or percents (e.g., `80`,
+    /// The output size, measured in character cells or percent (e.g., `80`,
     /// `80x40`, `80x40!`, `-80x40`, `100%`).
     /// [default: downscale to terminal size (if the output is a terminal) or
     /// 100% (otherwise)]
