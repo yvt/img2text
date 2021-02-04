@@ -30,6 +30,7 @@ enum Style {
     Ms2x3,
     Blocks2x2,
     Blocks2x3,
+    Braille2x4,
 }
 
 impl Style {
@@ -39,6 +40,7 @@ impl Style {
             Self::Ms2x3 => img2text::GLYPH_SET_MS_2X3,
             Self::Blocks2x2 => img2text::GLYPH_SET_2X2,
             Self::Blocks2x3 => img2text::GLYPH_SET_2X3,
+            Self::Braille2x4 => img2text::GLYPH_SET_BRAILLE8,
         }
     }
 }
