@@ -31,8 +31,7 @@ struct Opts {
     ///    ratio
     ///
     ///  - 150%: Scale by 150%. The actual output size depends on the glyph set
-    ///    being used; for example, `blocks2x3` maps each 2x3 block to one
-    ///    character.
+    ///    being used; for example, `2x3` maps each 2x3 block to one character.
     ///
     #[clap(short = 's')]
     out_size: Option<SizeSpec>,
@@ -58,9 +57,9 @@ struct Opts {
 enum Style {
     Slc,
     Ms2x3,
-    Blocks2x2,
-    Blocks2x3,
-    Braille2x4,
+    _2x2,
+    _2x3,
+    Braille,
 }
 
 impl Style {
@@ -68,9 +67,9 @@ impl Style {
         match self {
             Self::Slc => img2text::GLYPH_SET_SLC,
             Self::Ms2x3 => img2text::GLYPH_SET_MS_2X3,
-            Self::Blocks2x2 => img2text::GLYPH_SET_2X2,
-            Self::Blocks2x3 => img2text::GLYPH_SET_2X3,
-            Self::Braille2x4 => img2text::GLYPH_SET_BRAILLE8,
+            Self::_2x2 => img2text::GLYPH_SET_2X2,
+            Self::_2x3 => img2text::GLYPH_SET_2X3,
+            Self::Braille => img2text::GLYPH_SET_BRAILLE8,
         }
     }
 }
