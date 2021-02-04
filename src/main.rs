@@ -131,7 +131,7 @@ impl FromStr for SizeSpec {
                 return Err(format!("ratio out of range: '{}'", rest));
             }
 
-            return Ok(Self::Relative(ratio));
+            return Ok(Self::Relative(ratio / 100.0));
         }
 
         let force = if let Some(rest) = s.strip_suffix("!") {
