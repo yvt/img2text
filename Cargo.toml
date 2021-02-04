@@ -20,6 +20,7 @@ default = ["bin"]
 bin = [
     "env_logger",
     "image",
+    "imageproc",
     "clap",
     "log",
 ]
@@ -28,6 +29,9 @@ bin = [
 num-integer = { version = "0.1.42", default-features = false }
 num-traits = { version = "0.2.11", default-features = false }
 env_logger = { version = "0.8.1", optional = true }
+# TODO: `imageproc` currently compiles all algorithms. I hope they break them
+#       into features...
+imageproc = { version = "0.22.0", optional = true }
 clap = { version = "3.0.0-beta.2", features = ["wrap_help"], optional = true }
 log = { version = "0.4.11", optional = true }
 

@@ -19,9 +19,22 @@ struct Opts {
     /// 80x40! => fit to 80x40, not maintaining the aspect ratio
     #[clap(short = 's')]
     out_size: Option<SizeSpec>,
+
     /// Specifies how to interpret the input image.
     #[clap(short = 'i', default_value = "auto", arg_enum)]
     input_ty: InputTy,
+    /// A parameter for the Canny edge detector (`-i edge-canny`).
+    ///
+    /// Edges with a strength higher than the low threshold will appear in the
+    /// output image if there are strong edges nearby.
+    #[clap(long = "canny-low-threshold", default_value = "10")]
+    edge_canny_low_threshold: f32,
+    /// A parameter for the Canny edge detector (`-i edge-canny`).
+    ///
+    /// Edges with a strength higher than the high threshold will always appear
+    /// as edges in the output image.
+    #[clap(long = "canny-high-threshold", default_value = "20")]
+    edge_canny_high_threshold: f32,
 }
 
 #[derive(Clap, Debug)]
@@ -53,6 +66,8 @@ enum InputTy {
     Wob,
     /// Black-on-white
     Bow,
+    /// Canny edge detection
+    EdgeCanny,
 }
 
 #[derive(Debug)]
@@ -111,6 +126,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if !opts.cell_width.is_finite() || opts.cell_width <= 0.1 || opts.cell_width > 10.0 {
         panic!("cell_width is out of range");
+    }
+
+    if !opts.edge_canny_low_threshold.is_finite()
+        || opts.edge_canny_low_threshold <= 0.0
+        || opts.edge_canny_low_threshold > 1150.0
+    {
+        panic!("edge_canny_low_threshold is out of range");
+    }
+
+    if !opts.edge_canny_high_threshold.is_finite()
+        || opts.edge_canny_high_threshold <= 0.0
+        || opts.edge_canny_high_threshold > 1150.0
+    {
+        panic!("edge_canny_high_threshold is out of range");
+    }
+
+    if opts.edge_canny_low_threshold > opts.edge_canny_high_threshold {
+        panic!("edge_canny_low_threshold mustn't be greater than edge_canny_high_threshold");
     }
 
     // Resize the image if requested
@@ -180,6 +213,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let omega0: u32 = histogram[..threshold].iter().sum();
             let omega1: u32 = histogram[threshold..].iter().sum();
             omega1 > omega0
+        }
+        InputTy::EdgeCanny => {
+            img = imageproc::edges::canny(
+                &img,
+                opts.edge_canny_low_threshold,
+                opts.edge_canny_high_threshold,
+            );
+            false
         }
     };
 
