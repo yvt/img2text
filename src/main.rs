@@ -366,11 +366,13 @@ fn main() -> Result<()> {
             omega1 > omega0
         }
         InputTy::EdgeCanny => {
-            img = imageproc::edges::canny(
-                &img,
-                opts.edge_canny_low_threshold,
-                opts.edge_canny_high_threshold,
-            );
+            if img.width() != 0 && img.height() != 0 {
+                img = imageproc::edges::canny(
+                    &img,
+                    opts.edge_canny_low_threshold,
+                    opts.edge_canny_high_threshold,
+                );
+            }
             false
         }
     };
