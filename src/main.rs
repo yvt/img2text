@@ -1,6 +1,8 @@
 use clap::{Clap, ValueHint};
 use std::{convert::TryInto, path::PathBuf, str::FromStr};
 
+mod otsu;
+
 #[derive(Clap, Debug)]
 struct Opts {
     /// The image to process
@@ -17,6 +19,9 @@ struct Opts {
     /// 80x40! => fit to 80x40, not maintaining the aspect ratio
     #[clap(short = 's')]
     out_size: Option<SizeSpec>,
+    /// Specifies how to interpret the input image.
+    #[clap(short = 'i', default_value = "auto", arg_enum)]
+    input_ty: InputTy,
 }
 
 #[derive(Clap, Debug)]
@@ -36,6 +41,16 @@ impl Style {
             Self::Blocks2x3 => img2text::GLYPH_SET_2X3,
         }
     }
+}
+
+#[derive(Clap, Debug)]
+enum InputTy {
+    /// Automatic detection
+    Auto,
+    /// White-on-black
+    Wob,
+    /// Black-on-white
+    Bow,
 }
 
 #[derive(Debug)]
@@ -140,9 +155,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    // Auto-threshold
+    let mut histogram = [0; 256];
+    otsu::accumulate_histogram(
+        &mut histogram,
+        img.pixels().map(|&image::Luma([luma])| luma),
+    );
+    log::trace!("histogram = {:?}", histogram);
+    let threshold = if let Some(x) = otsu::find_threshold(&histogram) {
+        log::debug!("threshold = {}", x);
+        x
+    } else {
+        log::debug!("couldn't find the threshold, using the default value 128");
+        128
+    };
+
+    // black-on-white/white-on-black detection
+    let invert = match opts.input_ty {
+        InputTy::Bow => true,
+        InputTy::Wob => false,
+        InputTy::Auto => {
+            let omega0: u32 = histogram[..threshold].iter().sum();
+            let omega1: u32 = histogram[threshold..].iter().sum();
+            omega1 > omega0
+        }
+    };
+
     // Process the image
     use img2text::ImageRead;
-    let img_proxy = GrayImageRead(&img);
+    let img_proxy = GrayImageRead {
+        image: &img,
+        threshold,
+        invert,
+    };
     let mut out_buffer = String::with_capacity(
         img2text::max_output_len_for_image_dims(img_proxy.dims(), &b2t_opts)
             .expect("image is too large"),
@@ -157,18 +202,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-struct GrayImageRead<'a>(&'a image::GrayImage);
+struct GrayImageRead<'a> {
+    image: &'a image::GrayImage,
+    threshold: usize,
+    invert: bool,
+}
 
 impl img2text::ImageRead for GrayImageRead<'_> {
     fn dims(&self) -> [usize; 2] {
-        let (w, h) = self.0.dimensions();
+        let (w, h) = self.image.dimensions();
         [w.try_into().unwrap(), h.try_into().unwrap()]
     }
 
     fn copy_line_as_spans_to(&self, y: usize, out: &mut [img2text::Span]) {
-        let img = self.0;
+        let Self {
+            image,
+            threshold,
+            invert,
+        } = *self;
         img2text::set_spans_by_fn(out, self.dims()[0], move |x| {
-            img[(x as u32, y as u32)].0[0] >= 128
+            (image[(x as u32, y as u32)].0[0] as usize >= threshold) ^ invert
         });
     }
 }
