@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "web",
+]
+
 [package]
 name = "img2text"
 version = "0.1.0"
