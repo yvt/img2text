@@ -7,5 +7,6 @@ runCommand "dummy" rec {
     wasm-bindgen-cli
     binaryen
     rustup
+    lessc
   ];
 } ""
