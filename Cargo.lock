@@ -572,8 +572,11 @@ dependencies = [
 name = "img2text_web"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
+ "serde",
  "wasm-bindgen",
  "wasm-logger",
+ "web-sys",
  "yew",
 ]
 

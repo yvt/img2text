@@ -1,25 +1,44 @@
-use wasm_bindgen::prelude::*;
-use yew::prelude::*;
+use wasm_bindgen::{prelude::*, JsValue};
+use yew::{
+    prelude::*,
+    worker::{Bridge, Bridged},
+};
+
+mod worker;
 
 struct Model {
     link: ComponentLink<Self>,
     value: i64,
+    worker: Box<dyn Bridge<worker::WorkerServer>>,
 }
 
 enum Msg {
     AddOne,
+    GotValue(i64),
 }
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+        let worker = worker::WorkerServer::bridge(link.callback(|msg| match msg {
+            worker::S2cMsg::Value(x) => Msg::GotValue(x),
+        }));
+        Self {
+            link,
+            value: 0,
+            worker,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::AddOne => self.value += 1,
+            Msg::AddOne => {
+                self.worker.send(worker::C2sMsg::AddOne);
+            }
+            Msg::GotValue(x) => {
+                self.value = x;
+            }
         }
         true
     }
@@ -43,6 +62,12 @@ impl Component for Model {
 
 #[wasm_bindgen(start)]
 pub fn start() {
+    use js_sys::{global, Reflect};
+
     wasm_logger::init(wasm_logger::Config::default());
-    App::<Model>::new().mount_to_body();
+    if Reflect::has(&global(), &JsValue::from_str("window")).unwrap() {
+        App::<Model>::new().mount_to_body();
+    } else {
+        worker::WorkerServer::register();
+    }
 }
