@@ -1,0 +1,51 @@
+name: Publish
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    name: Build and publish the website
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v12
+      with:
+        nix_path: nixpkgs=channel:nixos-20.09
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+
+    - name: Install Additional Target of the Rust Toolchain
+      run: rustup target add wasm32-unknown-unknown
+
+    - name: Build the Nix expression
+      run: nix-shell --run ''
+
+    - name: Cache Rust crates
+      uses: Swatinem/rust-cache@v1
+
+    - name: Cache Node.js modules
+      uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Build the application
+      run: nix-shell --run 'cd web && ./build.sh'
+
+    - name: Create CNAME file
+      run: echo 'img2text.yvt.jp' > web/static/CNAME
+
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: web/static
