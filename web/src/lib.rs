@@ -63,7 +63,7 @@ impl Component for Model {
 #[wasm_bindgen(start)]
 pub fn start() {
     use js_sys::{global, Reflect};
-
+    #[cfg(debug_assertions)]
     wasm_logger::init(wasm_logger::Config::default());
     if Reflect::has(&global(), &JsValue::from_str("window")).unwrap() {
         App::<Model>::new().mount_to_body();
