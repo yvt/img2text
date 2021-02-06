@@ -13,24 +13,29 @@ use self::{imagewell::ImageWell, outputview::OutputView};
 struct Model {
     link: ComponentLink<Self>,
     image: Option<web_sys::HtmlImageElement>,
+    font_size: u32,
 }
 
 enum Msg {
     SetImage(web_sys::HtmlImageElement),
+    SetFontSize(u32),
 }
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, image: None }
+        Self {
+            link,
+            image: None,
+            font_size: 14,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::SetImage(x) => {
-                self.image = Some(x.clone());
-            }
+            Msg::SetImage(x) => self.image = Some(x.clone()),
+            Msg::SetFontSize(x) => self.font_size = x,
         }
         true
     }
@@ -44,6 +49,9 @@ impl Component for Model {
 
     fn view(&self) -> Html {
         let ondrop = self.link.callback(|i| Msg::SetImage(i));
+        let font_size_oninput = self
+            .link
+            .callback(|e: InputData| Msg::SetFontSize(e.value.parse().unwrap()));
 
         let source_url = "https://github.com/yvt/img2text";
 
@@ -63,9 +71,16 @@ impl Component for Model {
                             accept="image/*"
                             ondrop=ondrop image=self.image.clone() />
                     </div>
+                    <label>
+                        { "Font Size:" }
+                        <input type="range" min="1" max="16"
+                            oninput=font_size_oninput />
+                    </label>
                 </header>
                 <main>
-                    <OutputView opts=opts />
+                    <OutputView
+                        opts=opts
+                        font_size=self.font_size />
                 </main>
             </>
         }

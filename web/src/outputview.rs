@@ -13,11 +13,13 @@ pub struct OutputView {
     opts: Option<Opts>,
     pending_work: bool,
     busy: bool,
+    font_size: u32,
 }
 
 #[derive(Properties, Clone)]
 pub struct Props {
     pub opts: Option<Opts>,
+    pub font_size: u32,
 }
 
 pub enum Msg {
@@ -50,6 +52,7 @@ impl Component for OutputView {
             opts: props.opts,
             pending_work: false,
             busy: false,
+            font_size: props.font_size,
         }
     }
 
@@ -97,18 +100,23 @@ impl Component for OutputView {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        let should_render = props.font_size != self.font_size;
+
         if props.opts != self.opts {
             self.opts = props.opts;
             self.pending_work = true;
             self.link.send_message(Msg::StartWorkIfDirty);
         }
 
-        false
+        self.font_size = props.font_size;
+
+        should_render
     }
 
     fn view(&self) -> Html {
         html! {
-            <pre aria-label="Conversion result" role="image">
+            <pre aria-label="Conversion result" role="image"
+                style=format!("font-size: {}px", self.font_size)>
                 <code ref=self.text_cell_ref.clone() />
             </pre>
         }

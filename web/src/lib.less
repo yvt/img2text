@@ -54,10 +54,23 @@ header.appHeader {
     display: flex;
     flex-direction: row;
     align-items: center;
+    flex-wrap: wrap;
     font-size: 90%;
     background: #e8e8e8;
     padding: 5px;
     margin: 0 0 5px 0;
+
+    input {
+        vertical-align: middle;
+    }
+    > label, > div {
+        margin-right: 4px;
+    }
+    input[type=range] { width: 120px; }
+    @media screen and (max-width: 500px) {
+        input[type=range] { width: 100px; }
+    }
+
     > h1 {
         font-size: 150%;
         font-weight: 300;
