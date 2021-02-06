@@ -4,6 +4,7 @@ use yew::{
     worker::{Bridge, Bridged},
 };
 
+mod filechoice;
 mod imagewell;
 mod worker;
 use self::imagewell::ImageWell;

@@ -1,8 +1,10 @@
 use std::rc::Rc;
 use wasm_bindgen::{closure::Closure, JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{DataTransfer, DragEvent, Element, File, HtmlImageElement, Node, Url};
+use web_sys::{DataTransfer, Element, File, HtmlImageElement, Node, Url};
 use yew::prelude::*;
+
+use crate::filechoice::FileChooser;
 
 pub struct ImageWell {
     link: ComponentLink<Self>,
@@ -12,7 +14,9 @@ pub struct ImageWell {
     cb_ondragover: Callback<DragEvent>,
     cb_ondragleave: Callback<DragEvent>,
     cb_ondrop: Callback<DragEvent>,
+    cb_onclick: Callback<MouseEvent>,
     ondrop: Option<Callback<HtmlImageElement>>,
+    chooser: FileChooser,
 }
 
 pub enum Msg {
@@ -22,6 +26,7 @@ pub enum Msg {
     DragLeave,
     DragEnd(Option<File>),
     ImageLoaded(HtmlImageElement),
+    InvokeFileChooser,
 }
 
 #[derive(Properties, Clone)]
@@ -68,15 +73,19 @@ impl Component for ImageWell {
             Msg::DragEnd(file)
         });
 
+        let cb_onclick = link.callback(|_: MouseEvent| Msg::InvokeFileChooser);
+
         Self {
             link,
             cb_ondragover,
             cb_ondragleave,
             cb_ondrop,
+            cb_onclick,
             accepting: false,
             wrap_ref: NodeRef::default(),
             image: props.image,
             ondrop: props.ondrop,
+            chooser: FileChooser::new(),
         }
     }
 
@@ -140,6 +149,13 @@ impl Component for ImageWell {
                 }
                 false
             }
+            Msg::InvokeFileChooser => {
+                let link = self.link.clone();
+                self.chooser.choose_file(move |file| {
+                    link.send_message(Msg::DragEnd(Some(file)));
+                });
+                false
+            }
         }
     }
 
@@ -172,6 +188,8 @@ impl Component for ImageWell {
                 ondragover=self.cb_ondragover.clone()
                 ondragleave=self.cb_ondragleave.clone()
                 ondrop=self.cb_ondrop.clone()
+                onclick=self.cb_onclick.clone()
+                title="Click to choose an image file"
                 ref=self.wrap_ref.clone() />
         }
     }

@@ -575,7 +575,9 @@ dependencies = [
  "futures",
  "js-sys",
  "log",
+ "once_cell",
  "serde",
+ "try-lock",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-logger",
@@ -1144,6 +1146,12 @@ checksum = "d8208a331e1cb318dd5bd76951d2b8fc48ca38a69f5f4e4af1b6a9f8c6236915"
 dependencies = [
  "once_cell",
 ]
+
+[[package]]
+name = "try-lock"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 
 [[package]]
 name = "ttf-parser"
