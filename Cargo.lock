@@ -573,6 +573,9 @@ name = "img2text_web"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "image",
+ "imageproc",
+ "img2text",
  "js-sys",
  "log",
  "once_cell",

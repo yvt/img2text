@@ -7,19 +7,24 @@ use yew::{
 mod filechoice;
 mod imagewell;
 mod worker;
+mod xform;
+mod xformsched;
 use self::imagewell::ImageWell;
 
 struct Model {
     link: ComponentLink<Self>,
-    value: i64,
+    value: String,
     worker: Box<dyn Bridge<worker::WorkerServer>>,
+    xformer: xformsched::Transformer<TransformerWorkerClient>,
     image: Option<web_sys::HtmlImageElement>,
 }
 
 enum Msg {
-    AddOne,
-    GotValue(i64),
+    GotValue(String),
     SetImage(web_sys::HtmlImageElement),
+    StartTransformerWork(u64, xform::WorkerRequest),
+    CancelTransformerWork(u64),
+    DoneTransformerWork(u64, xform::WorkerResponse),
 }
 
 impl Component for Model {
@@ -27,26 +32,52 @@ impl Component for Model {
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let worker = worker::WorkerServer::bridge(link.callback(|msg| match msg {
-            worker::S2cMsg::Value(x) => Msg::GotValue(x),
+            worker::S2cMsg::DoneTransformerWork(token, response) => {
+                Msg::DoneTransformerWork(token, response)
+            }
         }));
+
+        let xformer = xformsched::Transformer::new(TransformerWorkerClient { link: link.clone() });
+
         Self {
             link,
-            value: 0,
+            value: "hello!".to_owned(),
             worker,
+            xformer,
             image: None,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::AddOne => {
-                self.worker.send(worker::C2sMsg::AddOne);
-            }
             Msg::GotValue(x) => {
                 self.value = x;
             }
             Msg::SetImage(x) => {
-                self.image = Some(x);
+                self.image = Some(x.clone());
+
+                // Start transformation
+                let work = self.xformer.transform(xform::Opts { image: x });
+
+                let link = self.link.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    let text = work.await.unwrap();
+                    link.send_message(Msg::GotValue(text));
+                });
+            }
+            Msg::StartTransformerWork(token, request) => {
+                self.worker
+                    .send(worker::C2sMsg::StartTransformerWork(token, request));
+                return false;
+            }
+            Msg::CancelTransformerWork(token) => {
+                self.worker
+                    .send(worker::C2sMsg::CancelTransformerWork(token));
+                return false;
+            }
+            Msg::DoneTransformerWork(token, response) => {
+                self.xformer.handle_worker_response(token, response);
+                return false;
             }
         }
         true
@@ -63,15 +94,29 @@ impl Component for Model {
         let ondrop = self.link.callback(|i| Msg::SetImage(i));
         html! {
             <div>
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <p>{ self.value }</p>
                 <p>
                     <ImageWell
                         accept="image/*"
                         ondrop=ondrop image=self.image.clone() />
                 </p>
+                <pre><code>{&self.value}</code></pre>
             </div>
         }
+    }
+}
+
+struct TransformerWorkerClient {
+    link: ComponentLink<Model>,
+}
+
+impl xformsched::WorkerClientInterface for TransformerWorkerClient {
+    fn request(&self, token: u64, req: xform::WorkerRequest) {
+        self.link
+            .send_message(Msg::StartTransformerWork(token, req));
+    }
+
+    fn cancel(&self, token: u64) {
+        self.link.send_message(Msg::CancelTransformerWork(token));
     }
 }
 
