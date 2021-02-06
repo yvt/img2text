@@ -12,10 +12,10 @@ pub struct Opts {
     pub image: HtmlImageElement,
     pub max_size: usize,
     pub input_ty: InputTy,
+    pub style: Style,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
-#[repr(u8)]
 pub enum InputTy {
     /// Automatic detection
     Auto,
@@ -25,6 +25,31 @@ pub enum InputTy {
     Bow,
     /// Canny edge detection
     EdgeCanny,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+pub enum Style {
+    Slc,
+    Ms2x3,
+    _1x1,
+    _1x2,
+    _2x2,
+    _2x3,
+    Braille,
+}
+
+impl Style {
+    fn glyph_set(&self) -> &dyn img2text::GlyphSet {
+        match self {
+            Self::Slc => img2text::GLYPH_SET_SLC,
+            Self::Ms2x3 => img2text::GLYPH_SET_MS_2X3,
+            Self::_1x1 => img2text::GLYPH_SET_1X1,
+            Self::_1x2 => img2text::GLYPH_SET_1X2,
+            Self::_2x2 => img2text::GLYPH_SET_2X2,
+            Self::_2x3 => img2text::GLYPH_SET_2X3,
+            Self::Braille => img2text::GLYPH_SET_BRAILLE8,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -56,18 +81,20 @@ pub trait WorkerClientInterface {
 #[derive(Debug, Serialize, Deserialize)]
 struct SharedOpts {
     input_ty: InputTy,
+    style: Style,
 }
 
 impl SharedOpts {
     fn new(opts: &Opts) -> Self {
         Self {
             input_ty: opts.input_ty,
+            style: opts.style,
         }
     }
 
     fn to_b2t_opts(&self) -> img2text::Bmp2textOpts {
         let mut b2t_opts = img2text::Bmp2textOpts::new();
-        b2t_opts.glyph_set = img2text::GLYPH_SET_BRAILLE8;
+        b2t_opts.glyph_set = self.style.glyph_set();
         b2t_opts
     }
 }
