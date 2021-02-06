@@ -4,15 +4,34 @@ use std::{convert::TryInto, future::Future, pin::Pin};
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
+#[path = "../../src/otsu.rs"]
+mod otsu;
+
 #[derive(PartialEq, Clone)]
 pub struct Opts {
     pub image: HtmlImageElement,
+    pub max_size: usize,
+    pub input_ty: InputTy,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy, Serialize, Deserialize)]
+#[repr(u8)]
+pub enum InputTy {
+    /// Automatic detection
+    Auto,
+    /// White-on-black
+    Wob,
+    /// Black-on-white
+    Bow,
+    /// Canny edge detection
+    EdgeCanny,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorkerRequest {
     gray_image: Vec<u8>,
     width: usize,
+    shared_opts: SharedOpts,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -33,16 +52,54 @@ pub trait WorkerClientInterface {
     ) -> Pin<Box<dyn Future<Output = Result<WorkerResponse, Self::Error>> + '_>>;
 }
 
+/// The subset of `Opts` shared by both the main thread and the worker
+#[derive(Debug, Serialize, Deserialize)]
+struct SharedOpts {
+    input_ty: InputTy,
+}
+
+impl SharedOpts {
+    fn new(opts: &Opts) -> Self {
+        Self {
+            input_ty: opts.input_ty,
+        }
+    }
+
+    fn to_b2t_opts(&self) -> img2text::Bmp2textOpts {
+        let mut b2t_opts = img2text::Bmp2textOpts::new();
+        b2t_opts.glyph_set = img2text::GLYPH_SET_BRAILLE8;
+        b2t_opts
+    }
+}
+
 pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
     opts: Opts,
     mut worker: TWorkerClientInterface,
 ) -> Result<String, TWorkerClientInterface::Error> {
+    let shared_opts = SharedOpts::new(&opts);
+
+    // bmp2text options
+    let b2t_opts = shared_opts.to_b2t_opts();
+
+    // Resize the image input to get a output of desired size
+    let [width, height] = img2text::adjust_image_size_for_output_size_preserving_aspect_ratio(
+        [
+            opts.image.natural_width() as _,
+            opts.image.natural_height() as _,
+        ],
+        [opts.max_size, opts.max_size],
+        true,
+        false, // contain
+        0.5,
+        &b2t_opts,
+    )
+    .unwrap();
+
     // Since off-screen canvases are not supported by Safari, we convert the
     // image into raw pixels in a main thread
     let canvas = create_canvas();
-    let [width, height] = [opts.image.width(), opts.image.height()];
-    canvas.set_width(width);
-    canvas.set_height(height);
+    canvas.set_width(width as _);
+    canvas.set_height(height as _);
 
     let ctx = canvas
         .get_context("2d")
@@ -77,6 +134,7 @@ pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
         .request(WorkerRequest {
             gray_image,
             width: image_data.width() as _,
+            shared_opts,
         })
         .await?;
 
@@ -84,24 +142,75 @@ pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
 }
 
 /// Implements a portion of the transformation process that can run in a worker.
-pub fn worker_kernel(request: WorkerRequest) -> WorkerResponse {
+pub fn worker_kernel(
+    WorkerRequest {
+        width,
+        mut shared_opts,
+        gray_image,
+    }: WorkerRequest,
+) -> WorkerResponse {
     // Convert the image to `image::GrayImage`
-    let image = image::GrayImage::from_raw(
-        request.width as _,
-        (request.gray_image.len() / request.width) as u32,
-        request.gray_image,
-    )
-    .unwrap();
+    let mut image =
+        image::GrayImage::from_raw(width as _, (gray_image.len() / width) as u32, gray_image)
+            .unwrap();
+
+    // Auto-threshold
+    let mut histogram = [0; 256];
+    otsu::accumulate_histogram(
+        &mut histogram,
+        image.pixels().map(|&image::Luma([luma])| luma),
+    );
+    log::trace!("histogram = {:?}", histogram);
+    let threshold = if let Some(x) = otsu::find_threshold(&histogram) {
+        log::debug!("threshold = {}", x);
+        x
+    } else {
+        log::debug!("couldn't find the threshold, using the default value 128");
+        128
+    };
+
+    // black-on-white/white-on-black detection
+    let omega0: u32 = histogram[..threshold].iter().sum();
+    let omega1: u32 = histogram[threshold..].iter().sum();
+    if shared_opts.input_ty == InputTy::Auto {
+        let omega_min = omega0.min(omega1);
+        let omega_max = omega0.max(omega1);
+        log::debug!("[omega_min, omega_max] = {:?}", [omega_min, omega_max]);
+
+        // TODO: probably should take line thickness into account when detecting
+        //       line art
+        shared_opts.input_ty = if omega_min * 4 > omega_max {
+            InputTy::EdgeCanny
+        } else {
+            if omega1 > omega0 {
+                InputTy::Bow
+            } else {
+                InputTy::Wob
+            }
+        };
+        log::debug!("guessed input_ty = {:?}", shared_opts.input_ty);
+    }
+
+    let invert = match shared_opts.input_ty {
+        InputTy::Bow => true,
+        InputTy::Wob => false,
+        InputTy::Auto => unreachable!(),
+        InputTy::EdgeCanny => {
+            if image.width() != 0 && image.height() != 0 {
+                image = imageproc::edges::canny(&image, 10.0, 40.0);
+            }
+            false
+        }
+    };
 
     // bmp2text options
-    let mut b2t_opts = img2text::Bmp2textOpts::new();
-    b2t_opts.glyph_set = img2text::GLYPH_SET_BRAILLE8;
+    let b2t_opts = shared_opts.to_b2t_opts();
 
     use img2text::ImageRead;
     let img_proxy = GrayImageRead {
         image: &image,
-        threshold: 128, // TODO
-        invert: false,  // TODO
+        threshold,
+        invert,
     };
     let max_out_len =
         if let Some(x) = img2text::max_output_len_for_image_dims(img_proxy.dims(), &b2t_opts) {
