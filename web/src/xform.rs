@@ -117,7 +117,7 @@ pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
         [opts.max_size, opts.max_size],
         true,
         false, // contain
-        0.5,
+        0.45,
         &b2t_opts,
     )
     .unwrap();
