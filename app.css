@@ -209,3 +209,11 @@ main pre {
   border: 0.5px solid rgba(128, 128, 128, 0.1);
   padding: 5px;
 }
+code {
+  font-family: "Fairfax HD", monospace;
+  line-height: 1;
+}
+@font-face {
+  font-family: "Fairfax HD";
+  src: url("FairfaxHD-subfont.woff2") format("woff2");
+}
