@@ -11,6 +11,8 @@ pub struct OutputView {
     worker: Box<dyn Bridge<worker::WorkerServer>>,
     xformer: xformsched::Transformer<TransformerWorkerClient>,
     opts: Option<Opts>,
+    pending_work: bool,
+    busy: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -19,6 +21,7 @@ pub struct Props {
 }
 
 pub enum Msg {
+    StartWorkIfDirty,
     GotValue(String),
     StartTransformerWork(u64, xform::WorkerRequest),
     DoneTransformerWork(u64, xform::WorkerResponse),
@@ -45,17 +48,40 @@ impl Component for OutputView {
             worker,
             xformer,
             opts: props.opts,
+            pending_work: false,
+            busy: false,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::StartWorkIfDirty => {
+                if !self.busy && self.pending_work {
+                    self.pending_work = false;
+                    if let Some(opts) = self.opts.clone() {
+                        // Start transformation
+                        let work = self.xformer.transform(opts);
+
+                        let link = self.link.clone();
+                        wasm_bindgen_futures::spawn_local(async move {
+                            let text = work.await.unwrap();
+                            link.send_message(Msg::GotValue(text));
+                        });
+                    } else {
+                        self.link.send_message(Msg::GotValue(String::new()));
+                    }
+                }
+                return false;
+            }
             Msg::GotValue(x) => {
                 // Since the output text's amount can be enormous, it might be
                 // inefficient to route it through VDOM
                 if let Some(e) = self.text_cell_ref.cast::<web_sys::HtmlElement>() {
                     e.set_inner_text(&x);
                 }
+
+                self.busy = false;
+                self.link.send_message(Msg::StartWorkIfDirty);
             }
             Msg::StartTransformerWork(token, request) => {
                 self.worker
@@ -73,19 +99,8 @@ impl Component for OutputView {
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if props.opts != self.opts {
             self.opts = props.opts;
-
-            if let Some(opts) = self.opts.clone() {
-                // Start transformation
-                let work = self.xformer.transform(opts);
-
-                let link = self.link.clone();
-                wasm_bindgen_futures::spawn_local(async move {
-                    let text = work.await.unwrap();
-                    link.send_message(Msg::GotValue(text));
-                });
-            } else {
-                // TODO: clear the result
-            }
+            self.pending_work = true;
+            self.link.send_message(Msg::StartWorkIfDirty);
         }
 
         false
