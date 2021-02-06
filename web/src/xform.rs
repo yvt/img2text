@@ -1,7 +1,7 @@
 use js_sys::global;
 use serde::{Deserialize, Serialize};
 use std::{convert::TryInto, future::Future, pin::Pin};
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
 #[path = "../../src/otsu.rs"]
@@ -137,6 +137,8 @@ pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
         .unwrap() // should return non-null
         .dyn_into::<CanvasRenderingContext2d>()
         .unwrap(); // should return `CanvasRenderingContext2d`
+    ctx.set_fill_style(&JsValue::from("gray"));
+    ctx.fill_rect(0.0, 0.0, width as f64, height as f64);
     ctx.draw_image_with_html_image_element_and_dw_and_dh(
         &opts.image,
         0.0,
