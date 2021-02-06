@@ -145,7 +145,7 @@ impl Component for Model {
                     </div>
                     <label>
                         { "Font Size:" }
-                        <input type="range" min="1" max="16"
+                        <input type="range" min="1" max="24"
                             oninput=font_size_oninput />
                     </label>
                     <label>
