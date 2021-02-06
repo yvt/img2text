@@ -1,6 +1,6 @@
 #![recursion_limit = "1024"]
+use js_sys::global;
 use std::unreachable;
-
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use yew::prelude::*;
 
@@ -27,6 +27,7 @@ enum Msg {
     SetMaxSize(u32),
     SetInputTy(xform::InputTy),
     SetStyle(xform::Style),
+    ToggleTheme,
 }
 
 impl Component for Model {
@@ -50,6 +51,18 @@ impl Component for Model {
             Msg::SetMaxSize(x) => self.max_size = x,
             Msg::SetInputTy(x) => self.input_ty = x,
             Msg::SetStyle(x) => self.style = x,
+            Msg::ToggleTheme => {
+                global()
+                    .unchecked_into::<web_sys::Window>()
+                    .document()
+                    .unwrap()
+                    .document_element()
+                    .unwrap()
+                    .class_list()
+                    .toggle("invert")
+                    .unwrap();
+                return false;
+            }
         }
         true
     }
@@ -105,6 +118,7 @@ impl Component for Model {
             ),
             _ => unreachable!(),
         });
+        let toggle_theme_onclick = self.link.callback(|_| Msg::ToggleTheme);
 
         let source_url = "https://github.com/yvt/img2text";
 
@@ -155,6 +169,8 @@ impl Component for Model {
                                 })
                         }
                     </select>
+                    <span class="grow" />
+                    <button class="switchTheme" onclick=toggle_theme_onclick>{ "☀️" }</button>
                 </header>
                 <main>
                     <OutputView
@@ -168,7 +184,7 @@ impl Component for Model {
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    use js_sys::{global, Reflect};
+    use js_sys::Reflect;
     #[cfg(debug_assertions)]
     wasm_logger::init(wasm_logger::Config::default());
     if Reflect::has(&global(), &JsValue::from_str("window")).unwrap() {

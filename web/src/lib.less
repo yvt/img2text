@@ -6,8 +6,6 @@ html {
     font-family: 'Roboto', sans-serif;
     font-weight: 400;
     font-size: 15px;
-    background: #eee;
-    color: #333;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -27,6 +25,31 @@ html {
         align-items: center;
 
         body { display: none; }
+    }
+
+    .light() {
+        color: #333;
+        background: #eee;
+        &, & * {
+            --title-color: #888;
+            --gray-color: #666;
+            --header-background-color: #e8e8e8;
+        }
+    }
+    .dark() {
+        color: #aaa;
+        background: #222;
+        &, & * {
+            --title-color: #888;
+            --gray-color: #666;
+            --header-background-color: #2a2a2a;
+        }
+    }
+    .light();
+    @media (prefers-color-scheme: dark) { .dark(); }
+    &.invert {
+        @media (prefers-color-scheme: light) { .dark(); }
+        @media (prefers-color-scheme: dark) { .light(); }
     }
 }
 
@@ -56,7 +79,7 @@ header.appHeader {
     align-items: center;
     flex-wrap: wrap;
     font-size: 90%;
-    background: #e8e8e8;
+    background: var(--header-background-color);
     padding: 5px;
     margin: 0 0 5px 0;
 
@@ -75,13 +98,13 @@ header.appHeader {
         font-size: 150%;
         font-weight: 300;
         margin: 0;
-        color: #888;
+        color: var(--title-color);
         text-transform: uppercase;
         span { color: #a66; font-size: 120%; }
     }
     > span {
         margin: 0 10px 0 5px;
-        color: #666;
+        color: var(--gray-color);
         font-size: 80%;
     }
     > div.chooseImage {
@@ -92,6 +115,23 @@ header.appHeader {
             width: 40px;
             height: 40px;
             margin: 0 5px;
+        }
+    }
+    > .grow { flex-grow: 1; }
+    > button.switchTheme {
+        border: none;
+        font-size: inherit;
+        font-family: inherit;
+        font-weight: inherit;
+        background: transparent;
+        color: inherit;
+        margin: 0 5px 0 0; padding: 0;
+        font-size: 20px;
+        width: 40px; height: 40px;
+        cursor: pointer;
+        filter: saturate(0) contrast(0);
+        &:hover {
+            background: rgba(128, 128, 128, 0.1);
         }
     }
 }
@@ -108,7 +148,7 @@ main {
 
     pre { 
         margin: 0;
-        border: 0.5px solid silver;
+        border: 0.5px solid rgba(128, 128, 128, 0.1);
         padding: 5px;
     }
 }
