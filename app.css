@@ -219,8 +219,8 @@ main pre .copyToClipboard {
   bottom: 10px;
 }
 main pre .copyToClipboard > button {
-  background: #666;
-  color: white;
+  background: rgba(96, 96, 96, 0);
+  color: rgba(255, 255, 255, 0);
   margin: 0;
   padding: 10px;
   line-height: 1;
@@ -234,10 +234,19 @@ main pre .copyToClipboard > button {
   font-size: 0.9rem;
   font-weight: inherit;
   text-transform: uppercase;
-  opacity: 0;
-  transition: 300ms opacity;
+  transition: 300ms background-color, 300ms color;
 }
-main pre .copyToClipboard > button.success {
+main pre .copyToClipboard > button:before {
+  position: absolute;
+  content: "Copy to Clipboard";
+  padding: 10px;
+  left: 0;
+  top: 0;
+  background: #3d3;
+  opacity: 0;
+  color: white;
+}
+main pre .copyToClipboard > button.success:before {
   animation: 1500ms copyToClipboardSuccess both;
 }
 main pre .copyToClipboard > button.fail {
@@ -245,7 +254,6 @@ main pre .copyToClipboard > button.fail {
 }
 @keyframes copyToClipboardSuccess {
   0% {
-    background-color: #3d3;
     opacity: 0.8;
   }
 }
@@ -270,7 +278,8 @@ main pre .copyToClipboard > button.fail {
   }
 }
 main pre:hover .copyToClipboard > button {
-  opacity: 0.5;
+  background-color: rgba(96, 96, 96, 0.5);
+  color: rgba(255, 255, 255, 0.5);
 }
 code {
   font-family: "Fairfax HD", monospace;
