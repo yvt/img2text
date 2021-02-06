@@ -4,17 +4,21 @@ use yew::{
     worker::{Bridge, Bridged},
 };
 
+mod imagewell;
 mod worker;
+use self::imagewell::ImageWell;
 
 struct Model {
     link: ComponentLink<Self>,
     value: i64,
     worker: Box<dyn Bridge<worker::WorkerServer>>,
+    image: Option<web_sys::HtmlImageElement>,
 }
 
 enum Msg {
     AddOne,
     GotValue(i64),
+    SetImage(web_sys::HtmlImageElement),
 }
 
 impl Component for Model {
@@ -28,6 +32,7 @@ impl Component for Model {
             link,
             value: 0,
             worker,
+            image: None,
         }
     }
 
@@ -38,6 +43,9 @@ impl Component for Model {
             }
             Msg::GotValue(x) => {
                 self.value = x;
+            }
+            Msg::SetImage(x) => {
+                self.image = Some(x);
             }
         }
         true
@@ -51,10 +59,14 @@ impl Component for Model {
     }
 
     fn view(&self) -> Html {
+        let ondrop = self.link.callback(|i| Msg::SetImage(i));
         html! {
             <div>
                 <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
                 <p>{ self.value }</p>
+                <p>
+                    <ImageWell ondrop=ondrop image=self.image.clone() />
+                </p>
             </div>
         }
     }
