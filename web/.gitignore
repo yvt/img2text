@@ -2,3 +2,6 @@
 /static/wasm.js
 /static/package.json
 /static/app.css
+/static/*.ttf
+/static/*.woff
+/static/*.woff2

@@ -8,5 +8,7 @@ runCommand "dummy" rec {
     binaryen
     rustup
     lessc
+    python37Packages.fonttools
+    python37Packages.brotli
   ];
 } ""
