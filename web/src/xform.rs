@@ -95,6 +95,9 @@ pub async fn transform<TWorkerClientInterface: WorkerClientInterface>(
     )
     .unwrap();
 
+    // `getImageData`, etc. don't like zero dimensions
+    let [width, height] = [width.max(1), height.max(1)];
+
     // Since off-screen canvases are not supported by Safari, we convert the
     // image into raw pixels in a main thread
     let canvas = create_canvas();
