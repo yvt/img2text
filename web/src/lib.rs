@@ -149,7 +149,7 @@ impl Component for Model {
                             oninput=font_size_oninput />
                     </label>
                     <label>
-                        { "Max Size:" }
+                        { "Image Size:" }
                         <input type="range" min="1" max="500"
                             oninput=max_size_oninput />
                     </label>
