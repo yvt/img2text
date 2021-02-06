@@ -34,7 +34,6 @@ struct Request {
 
 pub trait WorkerClientInterface {
     fn request(&self, token: u64, req: xform::WorkerRequest);
-    fn cancel(&self, token: u64);
 }
 
 impl<TWorkerClientInterface: WorkerClientInterface> Transformer<TWorkerClientInterface> {
@@ -58,29 +57,13 @@ impl<TWorkerClientInterface: WorkerClientInterface> Transformer<TWorkerClientInt
             next_token.get()
         };
 
-        let inner_future = xform::transform(
+        xform::transform(
             opts,
             InnerWorkerClientInterface {
                 inner: Rc::downgrade(&self.inner),
                 token,
             },
-        );
-
-        let inner = Rc::downgrade(&self.inner);
-        HandleDrop(Box::pin(inner_future), move || {
-            // This closure will be called when this future is dropped
-            if let Some(inner) = inner.upgrade() {
-                // The response is no longer needed, so forget any relevant
-                // outstanding request
-                let mut requests = inner.requests.borrow_mut();
-                if let Some(i) = requests.iter().position(|r| r.token == token) {
-                    requests.swap_remove(i);
-                    drop(requests);
-
-                    inner.worker_client.cancel(token);
-                }
-            }
-        })
+        )
     }
 
     pub fn handle_worker_response(&self, token: u64, response: xform::WorkerResponse) {
@@ -89,9 +72,8 @@ impl<TWorkerClientInterface: WorkerClientInterface> Transformer<TWorkerClientInt
             if let Some(i) = requests.iter().position(|r| r.token == token) {
                 requests.swap_remove(i)
             } else {
-                // Already cancelled
-                log::debug!(
-                    "Ignoring a worker response with token {:?} (probably already cancelled)",
+                log::warn!(
+                    "Ignoring a worker response with an unknown token {:?}",
                     token
                 );
                 return;

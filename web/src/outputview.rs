@@ -21,7 +21,6 @@ pub struct Props {
 pub enum Msg {
     GotValue(String),
     StartTransformerWork(u64, xform::WorkerRequest),
-    CancelTransformerWork(u64),
     DoneTransformerWork(u64, xform::WorkerResponse),
 }
 
@@ -61,11 +60,6 @@ impl Component for OutputView {
             Msg::StartTransformerWork(token, request) => {
                 self.worker
                     .send(worker::C2sMsg::StartTransformerWork(token, request));
-                return false;
-            }
-            Msg::CancelTransformerWork(token) => {
-                self.worker
-                    .send(worker::C2sMsg::CancelTransformerWork(token));
                 return false;
             }
             Msg::DoneTransformerWork(token, response) => {
@@ -114,9 +108,5 @@ impl xformsched::WorkerClientInterface for TransformerWorkerClient {
     fn request(&self, token: u64, req: xform::WorkerRequest) {
         self.link
             .send_message(Msg::StartTransformerWork(token, req));
-    }
-
-    fn cancel(&self, token: u64) {
-        self.link.send_message(Msg::CancelTransformerWork(token));
     }
 }
