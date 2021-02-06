@@ -208,6 +208,69 @@ main pre {
   margin: 0;
   border: 0.5px solid rgba(128, 128, 128, 0.1);
   padding: 5px;
+  position: relative;
+}
+main pre .copyToClipboard {
+  display: block;
+  width: 0;
+  height: 0;
+  position: sticky;
+  left: 10px;
+  bottom: 10px;
+}
+main pre .copyToClipboard > button {
+  background: #666;
+  color: white;
+  margin: 0;
+  padding: 10px;
+  line-height: 1;
+  border-radius: 0;
+  border: 0;
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+  font-weight: inherit;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: 300ms opacity;
+}
+main pre .copyToClipboard > button.success {
+  animation: 1500ms copyToClipboardSuccess both;
+}
+main pre .copyToClipboard > button.fail {
+  animation: 400ms copyToClipboardFail;
+}
+@keyframes copyToClipboardSuccess {
+  0% {
+    background-color: #3d3;
+    opacity: 0.8;
+  }
+}
+@keyframes copyToClipboardFail {
+  0% {
+    left: 0;
+  }
+  20% {
+    left: 5px;
+  }
+  40% {
+    left: -5px;
+  }
+  60% {
+    left: 5px;
+  }
+  80% {
+    left: -5px;
+  }
+  100% {
+    left: 0;
+  }
+}
+main pre:hover .copyToClipboard > button {
+  opacity: 0.5;
 }
 code {
   font-family: "Fairfax HD", monospace;
