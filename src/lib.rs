@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 mod glyphsets;
 mod image;
 mod int;
@@ -149,4 +151,72 @@ pub fn max_output_len_for_image_dims(
         .checked_mul(glyph_set.max_glyph_len())
         .and_then(|x| x.checked_add(1)) // line termination
         .and_then(|x| x.checked_mul(num_lines_for_image_height(height, opts)))
+}
+
+#[doc(hidden)]
+pub fn adjust_image_size_for_output_size_preserving_aspect_ratio(
+    image_dims: [usize; 2],
+    output_dims: [usize; 2],
+    can_scale_up: bool,
+    cover: bool,
+    cell_width: f64,
+    opts: &Bmp2textOpts,
+) -> Option<[usize; 2]> {
+    let mask_dims = opts.glyph_set.mask_dims();
+    let mask_overlap = opts.glyph_set.mask_overlap();
+
+    // Calculate the "natural" size
+    let [nat_out_w, nat_out_h] = [
+        num_glyphs_for_image_width(image_dims[0], opts),
+        num_lines_for_image_height(image_dims[1], opts),
+    ];
+    let aspect = (mask_dims[1] - mask_overlap[1]) as f64 / (mask_dims[0] - mask_overlap[0]) as f64
+        * cell_width;
+
+    let [img_w, img_h] = [
+        nat_out_w as f64 / aspect.max(1.0),
+        nat_out_h as f64 * aspect.min(1.0),
+    ];
+    log::debug!("'natural' output size = {:?}", [img_w, img_h]);
+    let scale_x = output_dims[0] as f64 / img_w;
+    let scale_y = output_dims[1] as f64 / img_h;
+
+    let mut scale = if cover {
+        f64::max(scale_x, scale_y)
+    } else {
+        f64::min(scale_x, scale_y)
+    };
+    if !can_scale_up {
+        scale = scale.min(1.0);
+    }
+    log::debug!("scaling the 'natural' output size by {}...", scale);
+
+    let output_dims = [
+        (img_w * scale).round() as usize,
+        (img_h * scale).round() as usize,
+    ];
+
+    adjust_image_size_for_output_size(output_dims, opts)
+}
+
+#[doc(hidden)]
+pub fn adjust_image_size_for_output_size(
+    output_dims: [usize; 2],
+    opts: &Bmp2textOpts,
+) -> Option<[usize; 2]> {
+    let mask_dims = opts.glyph_set.mask_dims();
+    let mask_overlap = opts.glyph_set.mask_overlap();
+
+    Some([
+        output_dims[0]
+            .checked_mul(mask_dims[0] - mask_overlap[0])?
+            .checked_add(mask_overlap[0])?
+            .try_into()
+            .ok()?,
+        output_dims[1]
+            .checked_mul(mask_dims[1] - mask_overlap[1])?
+            .checked_add(mask_overlap[1])?
+            .try_into()
+            .ok()?,
+    ])
 }

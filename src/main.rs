@@ -240,72 +240,49 @@ fn main() -> Result<()> {
     // Resize the image if requested
     if let Some(out_size) = &opts.out_size {
         let in_dims = match out_size {
-            SizeSpec::Absolute { dims, mode } => {
-                let mask_dims = b2t_opts.glyph_set.mask_dims();
-                let mask_overlap = b2t_opts.glyph_set.mask_overlap();
+            SizeSpec::Absolute {
+                dims,
+                mode: SizeMode::Fill,
+            } => img2text::adjust_image_size_for_output_size(*dims, &b2t_opts)
+                .ok_or_else(|| anyhow!("requested size is too large"))?,
 
-                // `out_dims`: measured in character cells
-                let out_dims = if *mode == SizeMode::Fill {
-                    *dims
-                } else {
-                    // Calculate the "natural" size
-                    let [nat_out_w, nat_out_h] = [
-                        img2text::num_glyphs_for_image_width(img.width() as _, &b2t_opts),
-                        img2text::num_lines_for_image_height(img.height() as _, &b2t_opts),
-                    ];
-                    let aspect = (mask_dims[1] - mask_overlap[1]) as f64
-                        / (mask_dims[0] - mask_overlap[0]) as f64
-                        * opts.cell_width;
+            SizeSpec::Absolute {
+                dims,
+                mode: SizeMode::Contain,
+            } => img2text::adjust_image_size_for_output_size_preserving_aspect_ratio(
+                [img.width() as _, img.height() as _],
+                *dims,
+                true,
+                false, // contain
+                opts.cell_width,
+                &b2t_opts,
+            )
+            .ok_or_else(|| anyhow!("requested size is too large"))?,
 
-                    let [img_w, img_h] = [
-                        nat_out_w as f64 / aspect.max(1.0),
-                        nat_out_h as f64 * aspect.min(1.0),
-                    ];
-                    log::debug!("'natural' output size = {:?}", [img_w, img_h]);
-                    let scale_x = dims[0] as f64 / img_w;
-                    let scale_y = dims[1] as f64 / img_h;
+            SizeSpec::Absolute {
+                dims,
+                mode: SizeMode::ScaleDown,
+            } => img2text::adjust_image_size_for_output_size_preserving_aspect_ratio(
+                [img.width() as _, img.height() as _],
+                *dims,
+                false,
+                false, // contain
+                opts.cell_width,
+                &b2t_opts,
+            )
+            .ok_or_else(|| anyhow!("requested size is too large"))?,
 
-                    let mut scale = f64::min(scale_x, scale_y);
-                    if *mode == SizeMode::ScaleDown {
-                        scale = scale.min(1.0);
-                    }
-                    log::debug!("scaling the 'natural' output size by {}...", scale);
-
-                    [
-                        (img_w * scale).round() as usize,
-                        (img_h * scale).round() as usize,
-                    ]
-                };
-
-                log::debug!("output size goal = {:?}", out_dims);
-
-                // FIXME: Waiting for `try` blocks
-                (|| {
-                    Some([
-                        out_dims[0]
-                            .checked_mul(mask_dims[0] - mask_overlap[0])?
-                            .checked_add(mask_overlap[0])?
-                            .try_into()
-                            .ok()?,
-                        out_dims[1]
-                            .checked_mul(mask_dims[1] - mask_overlap[1])?
-                            .checked_add(mask_overlap[1])?
-                            .try_into()
-                            .ok()?,
-                    ])
-                })()
-                .ok_or_else(|| anyhow!("requested size is too large"))?
-            }
             SizeSpec::Relative(ratio) => {
                 let w = img.width() as f64 * ratio;
                 let h = img.height() as f64 * ratio;
                 if w > u32::MAX as f64 || h > u32::MAX as f64 {
                     bail!("requested size is too large");
                 }
-                // FIXME: Waiting for `try` blocks
-                [w as _, h as _]
+                [w as usize, h as usize]
             }
         };
+
+        let in_dims = [in_dims[0] as u32, in_dims[1] as u32];
 
         if img.dimensions() != (in_dims[0], in_dims[1]) {
             log::debug!(
