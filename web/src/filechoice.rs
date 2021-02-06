@@ -56,17 +56,20 @@ impl FileChooser {
     ///
     /// Note that if the user cancel the file choice, `cb` may live until this
     /// function is called again.
-    pub fn choose_file(&self, cb: impl FnOnce(File) + 'static) {
+    pub fn choose_file(&self, accept: &str, cb: impl FnOnce(File) + 'static) {
         let mut cb = Some(cb);
         // The codegen of calling `Box<FnOnce>` is not really great, so...
-        self.choose_file_inner(Box::new(move |file| {
-            if let Some(cb) = cb.take() {
-                cb(file);
-            }
-        }));
+        self.choose_file_inner(
+            accept,
+            Box::new(move |file| {
+                if let Some(cb) = cb.take() {
+                    cb(file);
+                }
+            }),
+        );
     }
 
-    fn choose_file_inner(&self, cb: Box<dyn FnMut(File)>) {
+    fn choose_file_inner(&self, accept: &str, cb: Box<dyn FnMut(File)>) {
         let input = if let Some(input) = self.inner.input.take() {
             input
         } else {
@@ -83,6 +86,7 @@ impl FileChooser {
             input
                 .set_attribute("style", "visibility:hidden;position:absolute")
                 .unwrap();
+            input.set_accept(accept);
             doc.document_element()
                 .unwrap()
                 .append_child(&input)

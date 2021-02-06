@@ -66,7 +66,9 @@ impl Component for Model {
                 <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
                 <p>{ self.value }</p>
                 <p>
-                    <ImageWell ondrop=ondrop image=self.image.clone() />
+                    <ImageWell
+                        accept="image/*"
+                        ondrop=ondrop image=self.image.clone() />
                 </p>
             </div>
         }

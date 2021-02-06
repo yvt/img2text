@@ -17,6 +17,7 @@ pub struct ImageWell {
     cb_onclick: Callback<MouseEvent>,
     ondrop: Option<Callback<HtmlImageElement>>,
     chooser: FileChooser,
+    chooser_accept: String,
 }
 
 pub enum Msg {
@@ -40,6 +41,13 @@ pub struct ImageWellProps {
     pub image: Option<HtmlImageElement>,
     #[prop_or_default]
     pub ondrop: Option<Callback<HtmlImageElement>>,
+    /// The comma-separated list of unique file type specifiers to accept.
+    ///
+    /// See the documentation of `<input type="file">` element's [`accept`]
+    /// attribute.
+    ///
+    /// [`accept`]: http://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/accept
+    pub accept: String,
 }
 
 impl Component for ImageWell {
@@ -86,6 +94,7 @@ impl Component for ImageWell {
             image: props.image,
             ondrop: props.ondrop,
             chooser: FileChooser::new(),
+            chooser_accept: props.accept,
         }
     }
 
@@ -151,7 +160,7 @@ impl Component for ImageWell {
             }
             Msg::InvokeFileChooser => {
                 let link = self.link.clone();
-                self.chooser.choose_file(move |file| {
+                self.chooser.choose_file(&self.chooser_accept, move |file| {
                     link.send_message(Msg::DragEnd(Some(file)));
                 });
                 false
@@ -162,6 +171,7 @@ impl Component for ImageWell {
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         let should_render = props.image != self.image;
         self.image = props.image;
+        self.chooser_accept = props.accept;
         should_render
     }
 
