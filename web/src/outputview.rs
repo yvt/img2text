@@ -64,8 +64,8 @@ impl Component for OutputView {
                     if let Some(opts) = self.opts.clone() {
                         // Start transformation
                         let work = self.xformer.transform(opts);
-
                         let link = self.link.clone();
+                        self.busy = true;
                         wasm_bindgen_futures::spawn_local(async move {
                             let text = work.await.unwrap();
                             link.send_message(Msg::GotValue(text));
