@@ -6,6 +6,7 @@
   display: inline-block;
   width: 100px;
   height: 100px;
+  user-select: none;
 }
 .imagewell:hover {
   border-color: rgba(255, 255, 255, 0.4);
@@ -37,7 +38,8 @@
   }
 }
 html {
-  font-family: sans-serif;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
   font-size: 15px;
   background: #eee;
   color: #333;
@@ -69,4 +71,54 @@ body {
   box-sizing: border-box;
   margin: 0;
   padding: 10px;
+  flex-direction: column;
+}
+a {
+  color: #07d;
+  text-decoration: underline;
+}
+a:hover {
+  text-decoration: none;
+}
+header.appHeader {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 90%;
+  background: #e8e8e8;
+  padding: 5px;
+  margin: 0 0 5px 0;
+}
+header.appHeader > h1 {
+  font-size: 150%;
+  font-weight: 300;
+  margin: 0;
+  color: #888;
+  text-transform: uppercase;
+}
+header.appHeader > h1 span {
+  color: #a66;
+  font-size: 120%;
+}
+header.appHeader > span {
+  margin: 0 10px 0 5px;
+  color: #666;
+  font-size: 80%;
+}
+header.appHeader > div.chooseImage {
+  display: flex;
+  align-items: center;
+}
+header.appHeader > div.chooseImage .imagewell {
+  width: 40px;
+  height: 40px;
+  margin: 0 5px;
+}
+main {
+  flex-grow: 1;
+  overflow: auto;
+}
+main pre {
+  margin: 0;
 }
