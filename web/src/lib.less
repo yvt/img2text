@@ -3,7 +3,8 @@
 @keyframes fade-in { 0% {opacity: 0} 100% {opacity: 1} }
 
 html {
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 400;
     font-size: 15px;
     background: #eee;
     color: #333;
@@ -36,5 +37,54 @@ body {
     box-sizing: border-box;
     margin: 0;
     padding: 10px;
+    flex-direction: column;
 }
 
+a {
+    color: #07d;
+    text-decoration: underline;
+    &:hover {
+        text-decoration: none;
+    }
+}
+
+header.appHeader {
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-size: 90%;
+    background: #e8e8e8;
+    padding: 5px;
+    margin: 0 0 5px 0;
+    > h1 {
+        font-size: 150%;
+        font-weight: 300;
+        margin: 0;
+        color: #888;
+        text-transform: uppercase;
+        span { color: #a66; font-size: 120%; }
+    }
+    > span {
+        margin: 0 10px 0 5px;
+        color: #666;
+        font-size: 80%;
+    }
+    > div.chooseImage {
+        display: flex;
+        align-items: center;
+
+        .imagewell {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+        }
+    }
+}
+
+main {
+    flex-grow: 1;
+    overflow: auto;
+    pre { margin: 0; }
+}

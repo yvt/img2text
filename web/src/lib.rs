@@ -1,3 +1,4 @@
+#![recursion_limit = "1024"]
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use yew::{
     prelude::*,
@@ -96,15 +97,30 @@ impl Component for Model {
 
     fn view(&self) -> Html {
         let ondrop = self.link.callback(|i| Msg::SetImage(i));
+
+        let source_url = "https://github.com/yvt/img2text";
+
         html! {
-            <div>
-                <p>
-                    <ImageWell
-                        accept="image/*"
-                        ondrop=ondrop image=self.image.clone() />
-                </p>
-                <pre><code ref=self.output_cell_ref.clone() /></pre>
-            </div>
+            <>
+                <header class="appHeader">
+                    <h1>{ "img" }<span>{ "2" }</span>{ "text" }</h1>
+                    <span>
+                        { "[" }<a href=source_url>{ "Source Code" }</a>{ "]" }
+                    </span>
+                    <div class="chooseImage">
+                        <span>{ "Choose an input image:" }</span>
+                        <ImageWell
+                            // TODO: `aria-labelled`
+                            accept="image/*"
+                            ondrop=ondrop image=self.image.clone() />
+                    </div>
+                </header>
+                <main>
+                    <pre aria-label="Conversion result" role="image">
+                        <code ref=self.output_cell_ref.clone() />
+                    </pre>
+                </main>
+            </>
         }
     }
 }
