@@ -38,7 +38,7 @@ jobs:
         key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
     - name: Build the application
-      run: nix-shell --run 'cd web && ./build.sh'
+      run: nix-shell --run 'cd web && make'
 
     - name: Create CNAME file
       run: echo 'img2text.yvt.jp' > web/static/CNAME
