@@ -86,7 +86,7 @@ impl Component for Model {
             (xform::Style::Ms2x3, "SLC marching squares"),
             (xform::Style::_1x1, "Blocks 1x1"),
             (xform::Style::_1x2, "Blocks 1x2"),
-            (xform::Style::_2x2, "Blocks 2x3"),
+            (xform::Style::_2x2, "Blocks 2x2"),
             (xform::Style::_2x3, "Blocks 2x3"),
             (xform::Style::Braille, "Braille patterns"),
         ];
