@@ -219,8 +219,8 @@ main pre .copyToClipboard {
   bottom: 10px;
 }
 main pre .copyToClipboard > button {
-  background: rgba(96, 96, 96, 0);
-  color: rgba(255, 255, 255, 0);
+  background: rgba(64, 64, 64, 0);
+  color: rgba(230, 230, 230, 0);
   margin: 0;
   padding: 10px;
   line-height: 1;
@@ -278,8 +278,8 @@ main pre .copyToClipboard > button.fail {
   }
 }
 main pre:hover .copyToClipboard > button {
-  background-color: rgba(96, 96, 96, 0.5);
-  color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(64, 64, 64, 0.6);
+  color: rgba(230, 230, 230, 0.9);
 }
 code {
   font-family: "Fairfax HD", monospace;
