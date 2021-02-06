@@ -41,13 +41,13 @@ html {
   font-family: 'Roboto', sans-serif;
   font-weight: 400;
   font-size: 15px;
-  background: #eee;
-  color: #333;
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   display: flex;
+  color: #333;
+  background: #eee;
 }
 html:not(.ready) {
   text-align: center;
@@ -63,6 +63,48 @@ html:not(.ready):before {
 }
 html:not(.ready) body {
   display: none;
+}
+html,
+html * {
+  --title-color: #888;
+  --gray-color: #666;
+  --header-background-color: #e8e8e8;
+}
+@media (prefers-color-scheme: dark) {
+  html {
+    color: #aaa;
+    background: #222;
+  }
+  html,
+  html * {
+    --title-color: #888;
+    --gray-color: #666;
+    --header-background-color: #2a2a2a;
+  }
+}
+@media (prefers-color-scheme: light) {
+  html.invert {
+    color: #aaa;
+    background: #222;
+  }
+  html.invert,
+  html.invert * {
+    --title-color: #888;
+    --gray-color: #666;
+    --header-background-color: #2a2a2a;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  html.invert {
+    color: #333;
+    background: #eee;
+  }
+  html.invert,
+  html.invert * {
+    --title-color: #888;
+    --gray-color: #666;
+    --header-background-color: #e8e8e8;
+  }
 }
 body {
   display: flex;
@@ -85,16 +127,33 @@ header.appHeader {
   display: flex;
   flex-direction: row;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 90%;
-  background: #e8e8e8;
+  background: var(--header-background-color);
   padding: 5px;
   margin: 0 0 5px 0;
+}
+header.appHeader input {
+  vertical-align: middle;
+}
+header.appHeader > label,
+header.appHeader > div,
+header.appHeader > select {
+  margin-right: 4px;
+}
+header.appHeader input[type=range] {
+  width: 120px;
+}
+@media screen and (max-width: 500px) {
+  header.appHeader input[type=range] {
+    width: 100px;
+  }
 }
 header.appHeader > h1 {
   font-size: 150%;
   font-weight: 300;
   margin: 0;
-  color: #888;
+  color: var(--title-color);
   text-transform: uppercase;
 }
 header.appHeader > h1 span {
@@ -103,7 +162,7 @@ header.appHeader > h1 span {
 }
 header.appHeader > span {
   margin: 0 10px 0 5px;
-  color: #666;
+  color: var(--gray-color);
   font-size: 80%;
 }
 header.appHeader > div.chooseImage {
@@ -115,10 +174,38 @@ header.appHeader > div.chooseImage .imagewell {
   height: 40px;
   margin: 0 5px;
 }
+header.appHeader > .grow {
+  flex-grow: 1;
+}
+header.appHeader > button.switchTheme {
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  background: transparent;
+  color: inherit;
+  margin: 0 5px 0 0;
+  padding: 0;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  filter: saturate(0) contrast(0);
+}
+header.appHeader > button.switchTheme:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
 main {
   flex-grow: 1;
   overflow: auto;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  justify-content: safe center;
+  align-items: safe center;
 }
 main pre {
   margin: 0;
+  border: 0.5px solid rgba(128, 128, 128, 0.1);
+  padding: 5px;
 }
