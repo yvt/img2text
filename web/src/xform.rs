@@ -4,7 +4,7 @@ use std::{convert::TryInto, future::Future, pin::Pin};
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Opts {
     pub image: HtmlImageElement,
 }
