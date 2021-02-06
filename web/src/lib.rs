@@ -13,7 +13,7 @@ use self::imagewell::ImageWell;
 
 struct Model {
     link: ComponentLink<Self>,
-    value: String,
+    output_cell_ref: NodeRef,
     worker: Box<dyn Bridge<worker::WorkerServer>>,
     xformer: xformsched::Transformer<TransformerWorkerClient>,
     image: Option<web_sys::HtmlImageElement>,
@@ -41,7 +41,7 @@ impl Component for Model {
 
         Self {
             link,
-            value: "hello!".to_owned(),
+            output_cell_ref: NodeRef::default(),
             worker,
             xformer,
             image: None,
@@ -51,7 +51,11 @@ impl Component for Model {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::GotValue(x) => {
-                self.value = x;
+                // Since the output text's amount can be enormous, it might be
+                // inefficient to route it through VDOM
+                if let Some(e) = self.output_cell_ref.cast::<web_sys::HtmlElement>() {
+                    e.set_inner_text(&x);
+                }
             }
             Msg::SetImage(x) => {
                 self.image = Some(x.clone());
@@ -99,7 +103,7 @@ impl Component for Model {
                         accept="image/*"
                         ondrop=ondrop image=self.image.clone() />
                 </p>
-                <pre><code>{&self.value}</code></pre>
+                <pre><code ref=self.output_cell_ref.clone() /></pre>
             </div>
         }
     }
