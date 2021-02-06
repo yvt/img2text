@@ -1,5 +1,7 @@
 @import "./imagewell.less";
 
+@keyframes fade-in { 0% {opacity: 0} 100% {opacity: 1} }
+
 html {
     font-family: sans-serif;
     font-size: 15px;
@@ -9,6 +11,22 @@ html {
     padding: 0;
     width: 100%;
     height: 100%;
+    display: flex;
+
+    &:not(.ready) {
+        &:before {
+            content: "Splining reticulation...";
+            display: block;
+            font-size: 150%;
+            color: #777;
+            animation: 800ms fade-in 500ms both;
+        }
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+
+        body { display: none; }
+    }
 }
 
 body {

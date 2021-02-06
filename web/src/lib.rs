@@ -1,4 +1,4 @@
-use wasm_bindgen::{prelude::*, JsValue};
+use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use yew::{
     prelude::*,
     worker::{Bridge, Bridged},
@@ -79,6 +79,16 @@ pub fn start() {
     wasm_logger::init(wasm_logger::Config::default());
     if Reflect::has(&global(), &JsValue::from_str("window")).unwrap() {
         App::<Model>::new().mount_to_body();
+
+        global()
+            .unchecked_into::<web_sys::Window>()
+            .document()
+            .unwrap()
+            .document_element()
+            .unwrap()
+            .class_list()
+            .add_1("ready")
+            .unwrap();
     } else {
         worker::WorkerServer::register();
     }
