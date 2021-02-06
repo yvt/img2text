@@ -1,5 +1,7 @@
+use wasm_bindgen::JsCast;
 use yew::{
     prelude::*,
+    services::{timeout::TimeoutTask, TimeoutService},
     worker::{Bridge, Bridged},
 };
 
@@ -14,6 +16,8 @@ pub struct OutputView {
     pending_work: bool,
     busy: bool,
     font_size: u32,
+    copy_button_animation_timeout: Option<TimeoutTask>,
+    copy_button_result: Option<bool>,
 }
 
 #[derive(Properties, Clone)]
@@ -25,6 +29,8 @@ pub struct Props {
 pub enum Msg {
     StartWorkIfDirty,
     GotValue(String),
+    CopyToClipboard,
+    CopyToClipboardResult(bool),
     StartTransformerWork(u64, xform::WorkerRequest),
     DoneTransformerWork(u64, xform::WorkerResponse),
 }
@@ -53,6 +59,8 @@ impl Component for OutputView {
             pending_work: false,
             busy: false,
             font_size: props.font_size,
+            copy_button_animation_timeout: None,
+            copy_button_result: None,
         }
     }
 
@@ -86,6 +94,42 @@ impl Component for OutputView {
                 self.busy = false;
                 self.link.send_message(Msg::StartWorkIfDirty);
             }
+            Msg::CopyToClipboard => {
+                if let Some(e) = self.text_cell_ref.cast() {
+                    let doc = js_sys::global()
+                        .unchecked_into::<web_sys::Window>()
+                        .document()
+                        .unwrap()
+                        .dyn_into::<web_sys::HtmlDocument>()
+                        .unwrap();
+
+                    let range = doc.create_range().unwrap();
+                    range.select_node(&e).unwrap();
+
+                    let selection = js_sys::global()
+                        .unchecked_into::<web_sys::Window>()
+                        .get_selection()
+                        .unwrap()
+                        .unwrap();
+                    selection.empty().unwrap();
+                    selection.add_range(&range).unwrap();
+
+                    let ok = doc.exec_command("copy").is_ok();
+
+                    // Before displaying the result, reset the button's CSS class
+                    // so that the animation is restarted every time it's pressed
+                    self.copy_button_result = None;
+                    self.copy_button_animation_timeout = Some(TimeoutService::spawn(
+                        std::time::Duration::from_millis(30),
+                        self.link.callback(move |_| Msg::CopyToClipboardResult(ok)),
+                    ));
+
+                    selection.empty().unwrap();
+                }
+            }
+            Msg::CopyToClipboardResult(ok) => {
+                self.copy_button_result = Some(ok);
+            }
             Msg::StartTransformerWork(token, request) => {
                 self.worker
                     .send(worker::C2sMsg::StartTransformerWork(token, request));
@@ -114,10 +158,22 @@ impl Component for OutputView {
     }
 
     fn view(&self) -> Html {
+        let copy_to_clipboard_onclick = self.link.callback(|_| Msg::CopyToClipboard);
+        let copy_to_clipboard_class = match self.copy_button_result {
+            None => "",
+            Some(false) => "fail",
+            Some(true) => "success",
+        };
+
         html! {
             <pre aria-label="Conversion result" role="image"
                 style=format!("font-size: {}px", self.font_size)>
                 <code ref=self.text_cell_ref.clone() />
+                <span class="copyToClipboard">
+                    <button class=copy_to_clipboard_class
+                        onclick=copy_to_clipboard_onclick>
+                        { "Copy to Clipboard" }</button>
+                </span>
             </pre>
         }
     }

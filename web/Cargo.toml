@@ -33,9 +33,12 @@ features = [
     "HtmlImageElement",
     "HtmlInputElement",
     "DataTransfer",
+    "HtmlDocument",
     "DragEvent",
     "ImageData",
+    "Selection",
     "Document",
     "Window",
+    "Range",
     "File",
 ]

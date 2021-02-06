@@ -150,6 +150,70 @@ main {
         margin: 0;
         border: 0.5px solid rgba(128, 128, 128, 0.1);
         padding: 5px;
+
+        position: relative;
+
+        .copyToClipboard {
+            display: block;
+            width: 0;
+            height: 0;
+            position: sticky;
+            left: 10px; bottom: 10px;
+
+            > button {
+                background: rgba(64, 64, 64, 0);
+                color: rgba(230, 230, 230, 0);
+                margin: 0; padding: 10px; line-height: 1;
+                border-radius: 0;
+                border: 0;
+                cursor: pointer;
+
+                position: absolute;
+                left: 0; bottom: 0;
+
+                font-family: 'Roboto', sans-serif;
+                font-size: 0.9rem;
+                font-weight: inherit;
+                text-transform: uppercase;
+
+                transition: 300ms background-color, 300ms color;
+
+                // The "success" animation displays `&:before` for a brief moment.
+                // It closely replicates the button's appearance except that the
+                // background is bright green. Using this (instead of applying
+                // the animation on the button itself) makes sure the animation
+                // doesn't end right away when the mouse cursor leaves the
+                // button's area.
+                &:before {
+                    position: absolute;
+                    content: "Copy to Clipboard";
+                    padding: 10px;
+                    left: 0; top: 0;
+                    background: #3d3;
+                    opacity: 0;
+                    color: white;
+                }
+
+                &.success:before { animation: 1500ms copyToClipboardSuccess both; }
+                &.fail { animation: 400ms copyToClipboardFail; }
+
+                @keyframes copyToClipboardSuccess {
+                    0% { opacity: 0.8; }
+                }
+                @keyframes copyToClipboardFail {
+                    0% { left: 0; }
+                    20% { left: 5px; }
+                    40% { left: -5px; }
+                    60% { left: 5px; }
+                    80% { left: -5px; }
+                    100% { left: 0; }
+                }
+            }
+        }
+        &:hover .copyToClipboard > button {
+            background-color: rgba(64, 64, 64, 0.6);
+            color: rgba(230, 230, 230, 0.9);
+        }
     }
 }
 
