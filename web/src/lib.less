@@ -262,6 +262,22 @@ main {
             background-color: rgba(64, 64, 64, 0.6);
             color: rgba(230, 230, 230, 0.9);
         }
+        @media screen and (max-width: 700px) {
+            // On a mobile device...
+
+            // Always put the button near the screen corner. If we put it near
+            // the image corner as usual, the button would be displayed in an
+            // awkward position.
+            .copyToClipboard {
+                position: fixed;
+            }
+
+            // Always display the button
+            .copyToClipboard > button {
+                background-color: rgba(64, 64, 64, 0.6);
+                color: rgba(230, 230, 230, 0.9);
+            }
+        }
     }
 }
 
