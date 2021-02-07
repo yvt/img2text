@@ -46,7 +46,7 @@ impl Component for HelpView {
                 <div class="background" onclick=self.on_dismiss.clone() />
                 <div class="frame">
                     <InlineHtmlLoader src="help.html" />
-                    <h2>{ "Third-Party Software License" }</h2>
+                    <h2>{ "Third-Party Software Licenses" }</h2>
                     <InlineHtmlLoader src="license.html" />
                 </div>
             </dialog>

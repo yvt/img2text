@@ -128,8 +128,6 @@ impl Component for Model {
         let help_show = self.link.callback(|_| Msg::ToggleHelp(true));
         let help_hide = self.link.callback(|_| Msg::ToggleHelp(false));
 
-        let source_url = "https://github.com/yvt/img2text";
-
         let opts = self.image.clone().map(|image| xform::Opts {
             image,
             max_size: self.max_size as _,
@@ -140,10 +138,7 @@ impl Component for Model {
         html! {
             <>
                 <header class="appHeader" aria-hidden=["", "true"][self.help_visible as usize]>
-                    <h1>{ "img" }<span>{ "2" }</span>{ "text" }</h1>
-                    <span>
-                        { "[" }<a href=source_url>{ "Source Code" }</a>{ "]" }
-                    </span>
+                    <h1 class="branding">{ "img" }<span>{ "2" }</span>{ "text" }</h1>
                     <div class="chooseImage">
                         <span>{ "Choose an input image:" }</span>
                         <ImageWell

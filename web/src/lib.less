@@ -33,7 +33,6 @@ html {
         background: #eee;
         &, & * {
             --title-color: #888;
-            --gray-color: #666;
             --header-background-color: #e8e8e8;
         }
     }
@@ -42,7 +41,6 @@ html {
         background: #222;
         &, & * {
             --title-color: #888;
-            --gray-color: #666;
             --header-background-color: #2a2a2a;
         }
     }
@@ -72,6 +70,13 @@ a {
     }
 }
 
+.branding {
+    font-weight: 300;
+    color: var(--title-color);
+    text-transform: uppercase;
+    span { color: #a66; font-size: 120%; }
+}
+
 header.appHeader {
     flex-shrink: 0;
 
@@ -97,16 +102,7 @@ header.appHeader {
 
     > h1 {
         font-size: 150%;
-        font-weight: 300;
-        margin: 0;
-        color: var(--title-color);
-        text-transform: uppercase;
-        span { color: #a66; font-size: 120%; }
-    }
-    > span {
-        margin: 0 10px 0 5px;
-        color: var(--gray-color);
-        font-size: 80%;
+        margin: 0 8px 0 0;
     }
     > div.chooseImage {
         display: flex;

@@ -20,4 +20,4 @@ static/FairfaxHD-subfont.ttf: vendor/fairfaxhd/FairfaxHD.ttf.gz src/font-subset.
 static/license.html: ../Cargo.lock license-template.html
 	cargo-license -j > static/license.json
 	extrude-licenses --template-file license-template.html --input-file static/license.json \
-		--header-lines 7 --footer-lines 2 --escape-authors > static/license.html
+		--escape-authors > static/license.html
