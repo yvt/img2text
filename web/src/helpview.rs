@@ -84,6 +84,7 @@ impl Component for HelpView {
         html! {
             <div class=dialog_class
                 role="dialog"
+                aria-label="About this application"
                 onkeydown=dialog_on_keydown
                 tabindex=["-1", "0"][!self.visible as usize]
                 aria-hidden=["", "true"][!self.visible as usize]
