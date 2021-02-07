@@ -1,5 +1,7 @@
 use yew::prelude::*;
 
+use crate::loader::InlineHtmlLoader;
+
 pub struct HelpView {
     link: ComponentLink<Self>,
     on_dismiss: Callback<MouseEvent>,
@@ -43,7 +45,9 @@ impl Component for HelpView {
             <dialog class=dialog_class aria-hidden=["", "true"][!self.visible as usize]>
                 <div class="background" onclick=self.on_dismiss.clone() />
                 <div class="frame">
-                    {"todo!"}
+                    <InlineHtmlLoader src="help.html" />
+                    <h2>{ "Third-Party Software License" }</h2>
+                    <InlineHtmlLoader src="license.html" />
                 </div>
             </dialog>
         }

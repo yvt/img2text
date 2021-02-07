@@ -7,6 +7,7 @@ use yew::prelude::*;
 mod filechoice;
 mod helpview;
 mod imagewell;
+mod loader;
 mod outputview;
 mod worker;
 mod xform;
