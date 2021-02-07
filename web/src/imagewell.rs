@@ -194,7 +194,9 @@ impl Component for ImageWell {
 
     fn view(&self) -> Html {
         html! {
-            <div class=["imagewell", "imagewell imagewell accept"][self.accepting as usize]
+            <button class=["imagewell", "imagewell imagewell accept"][self.accepting as usize]
+                aria-haspopup="dialog" // it shows a browser-native dialog, so I suppose this is okay?
+                tabindex="0"
                 ondragover=self.cb_ondragover.clone()
                 ondragleave=self.cb_ondragleave.clone()
                 ondrop=self.cb_ondrop.clone()

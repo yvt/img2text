@@ -156,7 +156,7 @@ impl Component for Model {
                         <input type="range" min="1" max="500"
                             oninput=max_size_oninput />
                     </label>
-                    <select onchange=input_ty_onchange>
+                    <select onchange=input_ty_onchange aria-label="Input interpretation">
                         {
                             for INPUT_TY_TABLE.iter()
                                 .map(|&(x, label)| html! {
@@ -164,7 +164,7 @@ impl Component for Model {
                                 })
                         }
                     </select>
-                    <select onchange=style_onchange>
+                    <select onchange=style_onchange aria-label="Output glyph set">
                         {
                             for STYLE_TABLE.iter()
                                 .map(|&(x, label)| html! {
@@ -175,8 +175,11 @@ impl Component for Model {
                     <span class="grow" />
                     <button class="showHelp"
                         onclick=help_show
+                        label="About this application"
                         aria-haspopup="dialog">{ "?" }</button>
-                    <button class="switchTheme" onclick=toggle_theme_onclick>{ "☀️" }</button>
+                    <button class="switchTheme"
+                        label="Switch theme"
+                        onclick=toggle_theme_onclick>{ "☀️" }</button>
                 </header>
                 <main aria-hidden=["", "true"][self.help_visible as usize]>
                     <OutputView
