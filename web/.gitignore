@@ -5,3 +5,4 @@
 /static/*.ttf
 /static/*.woff
 /static/*.woff2
+/static/license*

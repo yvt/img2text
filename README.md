@@ -105,6 +105,8 @@ This will compile and install `img2text` the CLI app to `~/.cargo/bin` or somewh
 Prerequisites:
 
  - [`wasm-pack`](https://crates.io/crates/wasm-pack)
+ - [`cargo-license`](https://crates.io/crates/cargo-license)
+ - [`extrude-licenses`](https://crates.io/crates/extrude-licenses)
  - [Binaryen](https://github.com/WebAssembly/binaryen)
  - [rustup](https://www.rust-lang.org/tools/install)
  - [lessc](http://lesscss.org)
