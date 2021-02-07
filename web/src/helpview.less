@@ -1,0 +1,28 @@
+.helpView {
+    pointer-events: none;
+    &.show { pointer-events: auto; }
+
+    > .background {
+        background: black;
+        opacity: 0;
+        transition: 350ms opacity;
+        position: fixed;
+        left: 0; top: 0; width: 100%; height: 100%;
+    }
+
+    &.show > .background { opacity: 0.5; }
+
+    > .frame {
+        background: var(--header-background-color);
+        position: fixed;
+        right: -300px; top: 0; width: 300px; height: 100%;
+        transition: 350ms transform cubic-bezier(0.05, 0.2, 0.2, 1.0);
+        box-sizing: border-box;
+
+        padding: 15px;
+    }
+
+    &.show > .frame { transform: translateX(-100%); }
+
+}
+

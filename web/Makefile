@@ -8,7 +8,7 @@ wasm:
 	wasm-pack build --target no-modules --out-name wasm --out-dir ./static --no-typescript || exit $?
 	rm static/package.json static/.gitignore
 
-static/app.css: src/lib.less src/imagewell.less
+static/app.css: src/lib.less src/imagewell.less src/helpview.less
 	lessc src/lib.less static/app.css || exit $?
 
 static/FairfaxHD-subfont.ttf: vendor/fairfaxhd/FairfaxHD.ttf.gz src/font-subset.txt

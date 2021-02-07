@@ -5,12 +5,13 @@ use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use yew::prelude::*;
 
 mod filechoice;
+mod helpview;
 mod imagewell;
 mod outputview;
 mod worker;
 mod xform;
 mod xformsched;
-use self::{imagewell::ImageWell, outputview::OutputView};
+use self::{helpview::HelpView, imagewell::ImageWell, outputview::OutputView};
 
 struct Model {
     link: ComponentLink<Self>,
@@ -19,6 +20,7 @@ struct Model {
     max_size: u32,
     input_ty: xform::InputTy,
     style: xform::Style,
+    help_visible: bool,
 }
 
 enum Msg {
@@ -28,6 +30,7 @@ enum Msg {
     SetInputTy(xform::InputTy),
     SetStyle(xform::Style),
     ToggleTheme,
+    ToggleHelp(bool),
 }
 
 impl Component for Model {
@@ -41,6 +44,7 @@ impl Component for Model {
             max_size: 80,
             input_ty: xform::InputTy::Auto,
             style: xform::Style::Braille,
+            help_visible: false,
         }
     }
 
@@ -63,6 +67,7 @@ impl Component for Model {
                     .unwrap();
                 return false;
             }
+            Msg::ToggleHelp(b) => self.help_visible = b,
         }
         true
     }
@@ -119,6 +124,8 @@ impl Component for Model {
             _ => unreachable!(),
         });
         let toggle_theme_onclick = self.link.callback(|_| Msg::ToggleTheme);
+        let help_show = self.link.callback(|_| Msg::ToggleHelp(true));
+        let help_hide = self.link.callback(|_| Msg::ToggleHelp(false));
 
         let source_url = "https://github.com/yvt/img2text";
 
@@ -131,7 +138,7 @@ impl Component for Model {
 
         html! {
             <>
-                <header class="appHeader">
+                <header class="appHeader" aria-hidden=["", "true"][self.help_visible as usize]>
                     <h1>{ "img" }<span>{ "2" }</span>{ "text" }</h1>
                     <span>
                         { "[" }<a href=source_url>{ "Source Code" }</a>{ "]" }
@@ -170,13 +177,19 @@ impl Component for Model {
                         }
                     </select>
                     <span class="grow" />
+                    <button class="showHelp"
+                        onclick=help_show
+                        aria-haspopup="dialog">{ "?" }</button>
                     <button class="switchTheme" onclick=toggle_theme_onclick>{ "☀️" }</button>
                 </header>
-                <main>
+                <main aria-hidden=["", "true"][self.help_visible as usize]>
                     <OutputView
                         opts=opts
                         font_size=self.font_size />
                 </main>
+                <HelpView
+                    on_dismiss=help_hide
+                    visible=self.help_visible />
             </>
         }
     }
