@@ -97,6 +97,11 @@ header.appHeader {
     > label, > div, > select {
         margin-right: 4px;
     }
+    > select {
+        font-size: inherit;
+        font-family: inherit;
+        font-weight: inherit;
+    }
     > label {
         display: flex;
         flex-basis: 220px;
@@ -145,6 +150,7 @@ header.appHeader {
         -webkit-overflow-scrolling: touch;
         position: relative;
         padding: 10px;
+        font-size: 100%;
 
         > h1 {
             // Occupy a single line. The remaining space hosts `> .right`
@@ -163,10 +169,16 @@ header.appHeader {
             > span { min-width: 90px; }
         }
 
+        > select {
+            // If the font size was not large enough, MobileSafari would
+            // automatically adjust the page scale, which is annoying
+            font-size: 110%;
+        }
+
         > .right {
             // Move the help and theme button to the upper-right corner
             position: absolute;
-            right: 3px; top: 3px;
+            right: 6px; top: 6px;
         }
     }
 }
