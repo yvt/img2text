@@ -442,7 +442,7 @@ main pre:hover .copyToClipboard > button {
     color: rgba(230, 230, 230, 0.9);
   }
 }
-code {
+main code {
   font-family: "Fairfax HD", monospace;
   line-height: 1;
 }
