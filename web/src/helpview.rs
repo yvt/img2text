@@ -88,10 +88,11 @@ impl Component for HelpView {
                 tabindex=["-1", "0"][!self.visible as usize]
                 aria-hidden=["", "true"][!self.visible as usize]
             >
-                <div class="background" onclick=dialog_on_close />
+                <div class="background" onclick=dialog_on_close.clone() />
                 <div class="frame" ref=self.dialog_ref.clone()>
                     { contents }
                 </div>
+                <button class="close" aria-label="Close" onclick=dialog_on_close />
             </div>
         }
     }

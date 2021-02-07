@@ -27,6 +27,31 @@
 
     &.show > .frame { transform: translateX(-100%); }
 
+    > .close {
+        opacity: 0;
+        transition: 350ms opacity;
+        position: fixed;
+        right: 0px; top: 0px;
+        width: 60px; height: 65px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        margin: 0;
+        padding: 0;
+
+        &:before, &:after {
+            content: "";
+            position: absolute;
+            left: 20px; top: 34px;
+            width: 20px; height: 2px;
+            background: rgba(var(--color-rgb), 1);
+        }
+        &:before { transform: rotate(-45deg); }
+        &:after { transform: rotate(45deg); }
+    }
+
+    &.show > .close { opacity: 0.6; }
+
     // Loading
     > .frame > div:not(.ready) {
 
