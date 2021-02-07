@@ -21,3 +21,9 @@ static/license.html: ../Cargo.lock license-template.html
 	cargo-license -j > static/license.json
 	extrude-licenses --template-file license-template.html --input-file static/license.json \
 		--escape-authors > static/license.html
+	# It's probably not nice to put everyone's e-mail address on a public website
+	sed -i.bak -e 's/ &lt;[^&]*&gt;//g' static/license.html
+	rm static/license.html.bak
+	# Replace the separators
+	sed -i.bak -e 's/ *| */, /g' static/license.html
+	rm static/license.html.bak
