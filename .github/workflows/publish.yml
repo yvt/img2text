@@ -38,19 +38,21 @@ jobs:
         key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
     - name: Build the application
-      run: nix-shell --run 'cd web && make'
+      run: |
+        nix-shell --run 'cd web && make'
+        mv web/static static
 
     - name: Embed commit hash
       run: |
         VER=`git show --format=%h | head -1`
-        echo "<p class='rev'>Revision <code>$VER</code></p>" >> web/static/help.html
+        echo "<p class='rev'>Revision <code>$VER</code></p>" >> static/help.html
 
     - name: Create CNAME file
-      run: echo 'img2text.yvt.jp' > web/static/CNAME
+      run: echo 'img2text.yvt.jp' > static/CNAME
 
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
-        FOLDER: web/static
+        FOLDER: static
