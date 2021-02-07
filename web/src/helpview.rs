@@ -6,6 +6,7 @@ pub struct HelpView {
     link: ComponentLink<Self>,
     on_dismiss: Callback<()>,
     visible: bool,
+    load_contents: bool,
     dialog_ref: NodeRef,
 }
 
@@ -27,6 +28,7 @@ impl Component for HelpView {
         Self {
             link,
             visible: props.visible,
+            load_contents: false,
             on_dismiss: props.on_dismiss,
             dialog_ref: NodeRef::default(),
         }
@@ -46,6 +48,7 @@ impl Component for HelpView {
         let should_render = props.visible != self.visible;
         self.visible = props.visible;
         self.on_dismiss = props.on_dismiss;
+        self.load_contents |= props.visible;
         if props.visible {
             if let Some(e) = self.dialog_ref.cast::<web_sys::HtmlElement>() {
                 let _ = e.focus();
@@ -66,6 +69,18 @@ impl Component for HelpView {
             }
         });
 
+        let contents = if self.load_contents {
+            html! {
+                <>
+                    <InlineHtmlLoader src="help.html" />
+                    <h2>{ "Third-Party Software Licenses" }</h2>
+                    <InlineHtmlLoader src="license.html" />
+                </>
+            }
+        } else {
+            html! {}
+        };
+
         html! {
             <div class=dialog_class
                 role="dialog"
@@ -75,9 +90,7 @@ impl Component for HelpView {
             >
                 <div class="background" onclick=dialog_on_close />
                 <div class="frame" ref=self.dialog_ref.clone()>
-                    <InlineHtmlLoader src="help.html" />
-                    <h2>{ "Third-Party Software Licenses" }</h2>
-                    <InlineHtmlLoader src="license.html" />
+                    { contents }
                 </div>
             </div>
         }
