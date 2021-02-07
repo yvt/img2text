@@ -97,10 +97,12 @@ header.appHeader {
     > label, > div, > select {
         margin-right: 4px;
     }
-    input[type=range] { width: 120px; }
-    @media screen and (max-width: 500px) {
-        input[type=range] { width: 100px; }
+    > label {
+        display: flex;
+        flex-basis: 220px;
+        white-space: nowrap;
     }
+    input[type=range] { flex-grow: 1; }
 
     > h1 {
         font-size: 150%;
@@ -116,8 +118,11 @@ header.appHeader {
             margin: 0 5px;
         }
     }
-    > .grow { flex-grow: 1; }
-    > button {
+    > .right {
+        flex-grow: 1;
+        text-align: right;
+    }
+    > .right > button {
         border: none;
         font-size: inherit;
         font-family: inherit;
@@ -131,6 +136,37 @@ header.appHeader {
         filter: saturate(0) contrast(0);
         &:hover {
             background: rgba(128, 128, 128, 0.1);
+        }
+    }
+
+    @media screen and (max-width: 700px) {
+        max-height: 30%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        position: relative;
+        padding: 10px;
+
+        > h1 {
+            // Occupy a single line. The remaining space hosts `> .right`
+            width: 100%;
+        }
+
+        > .chooseImage, > label {
+            margin: 5px 0;
+            // Occupy a single line.
+            flex-grow: 1;
+            flex-basis: 100% !important;
+        }
+
+        > label {
+            // Make sure the controls associated with labels are aligned nicely
+            > span { min-width: 90px; }
+        }
+
+        > .right {
+            // Move the help and theme button to the upper-right corner
+            position: absolute;
+            right: 3px; top: 3px;
         }
     }
 }

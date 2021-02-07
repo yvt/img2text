@@ -147,12 +147,12 @@ impl Component for Model {
                             ondrop=ondrop image=self.image.clone() />
                     </div>
                     <label>
-                        { "Font size:" }
+                        <span>{ "Font size:" }</span>
                         <input type="range" min="1" max="24"
                             oninput=font_size_oninput />
                     </label>
                     <label>
-                        { "Image size:" }
+                        <span>{ "Image size:" }</span>
                         <input type="range" min="1" max="500"
                             oninput=max_size_oninput />
                     </label>
@@ -172,14 +172,15 @@ impl Component for Model {
                                 })
                         }
                     </select>
-                    <span class="grow" />
-                    <button class="showHelp"
-                        onclick=help_show
-                        label="About this application"
-                        aria-haspopup="dialog">{ "?" }</button>
-                    <button class="switchTheme"
-                        label="Switch theme"
-                        onclick=toggle_theme_onclick>{ "☀️" }</button>
+                    <span class="right">
+                        <button class="showHelp"
+                            onclick=help_show
+                            label="About this application"
+                            aria-haspopup="dialog">{ "?" }</button>
+                        <button class="switchTheme"
+                            label="Switch theme"
+                            onclick=toggle_theme_onclick>{ "☀️" }</button>
+                    </span>
                 </header>
                 <main aria-hidden=["", "true"][self.help_visible as usize]>
                     <OutputView
