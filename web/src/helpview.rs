@@ -42,14 +42,14 @@ impl Component for HelpView {
         let dialog_class = ["helpView", "helpView show"][self.visible as usize];
 
         html! {
-            <dialog class=dialog_class aria-hidden=["", "true"][!self.visible as usize]>
+            <div class=dialog_class role="dialog" aria-hidden=["", "true"][!self.visible as usize]>
                 <div class="background" onclick=self.on_dismiss.clone() />
                 <div class="frame">
                     <InlineHtmlLoader src="help.html" />
                     <h2>{ "Third-Party Software Licenses" }</h2>
                     <InlineHtmlLoader src="license.html" />
                 </div>
-            </dialog>
+            </div>
         }
     }
 }
