@@ -27,6 +27,44 @@
 
     &.show > .frame { transform: translateX(-100%); }
 
+    // Loading
+    > .frame > div:not(.ready) {
+
+        &:before {
+            // Do that usual "loading" appearance. The behavior of
+            // `overflow-wrap: break-word` is inconsistent on Safari, hence the
+            // use of white-spaces.
+            content: "█ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ ";
+            letter-spacing: -0.2em;
+            font-size: 90%;
+            line-height: 1.8;
+
+            opacity: 0.2;
+            display: block;
+
+            // And the animation
+            background-clip: text;
+            -webkit-background-clip: text !important;
+            color: transparent;
+            background:
+                rgba(var(--color-rgb), 0.5)
+                linear-gradient(to right,
+                    rgba(var(--color-rgb), 0),
+                    rgba(var(--color-rgb), 0.6),
+                    rgba(var(--color-rgb), 1),
+                    rgba(var(--color-rgb), 0.6),
+                    rgba(var(--color-rgb), 0))
+                no-repeat;
+            background-size: 90% 100%;
+            animation: 1000ms loadingBackgroundScroll infinite linear;
+
+            @keyframes loadingBackgroundScroll {
+                0% { background-position: -2000% 0; }
+                100% { background-position: 2000% 0; }
+            }
+        }
+    }
+
     // Typography
     font-size: 90%;
     font-weight: 400;
