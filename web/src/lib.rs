@@ -147,12 +147,12 @@ impl Component for Model {
                             ondrop=ondrop image=self.image.clone() />
                     </div>
                     <label>
-                        { "Font Size:" }
+                        { "Font size:" }
                         <input type="range" min="1" max="24"
                             oninput=font_size_oninput />
                     </label>
                     <label>
-                        { "Image Size:" }
+                        { "Image size:" }
                         <input type="range" min="1" max="500"
                             oninput=max_size_oninput />
                     </label>
