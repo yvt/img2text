@@ -40,6 +40,11 @@ jobs:
     - name: Build the application
       run: nix-shell --run 'cd web && make'
 
+    - name: Embed commit hash
+      run: |
+        VER=`git show --format=%h | head -1`
+        echo "<p class='rev'>Revision <code>$VER</code></p>" >> web/static/help.html
+
     - name: Create CNAME file
       run: echo 'img2text.yvt.jp' > web/static/CNAME
 
