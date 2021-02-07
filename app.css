@@ -70,6 +70,39 @@
 .helpView.show > .frame {
   transform: translateX(-100%);
 }
+.helpView > .close {
+  opacity: 0;
+  transition: 350ms opacity;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  width: 60px;
+  height: 65px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  margin: 0;
+  padding: 0;
+}
+.helpView > .close:before,
+.helpView > .close:after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 34px;
+  width: 20px;
+  height: 2px;
+  background: rgba(var(--color-rgb), 1);
+}
+.helpView > .close:before {
+  transform: rotate(-45deg);
+}
+.helpView > .close:after {
+  transform: rotate(45deg);
+}
+.helpView.show > .close {
+  opacity: 0.6;
+}
 .helpView > .frame > div:not(.ready):before {
   content: "█ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ ";
   letter-spacing: -0.2em;
@@ -235,13 +268,13 @@ header.appHeader > div,
 header.appHeader > select {
   margin-right: 4px;
 }
-header.appHeader input[type=range] {
-  width: 120px;
+header.appHeader > label {
+  display: flex;
+  flex-basis: 220px;
+  white-space: nowrap;
 }
-@media screen and (max-width: 500px) {
-  header.appHeader input[type=range] {
-    width: 100px;
-  }
+header.appHeader input[type=range] {
+  flex-grow: 1;
 }
 header.appHeader > h1 {
   font-size: 150%;
@@ -256,10 +289,11 @@ header.appHeader > div.chooseImage .imagewell {
   height: 40px;
   margin: 0 5px;
 }
-header.appHeader > .grow {
+header.appHeader > .right {
   flex-grow: 1;
+  text-align: right;
 }
-header.appHeader > button {
+header.appHeader > .right > button {
   border: none;
   font-size: inherit;
   font-family: inherit;
@@ -274,8 +308,34 @@ header.appHeader > button {
   cursor: pointer;
   filter: saturate(0) contrast(0);
 }
-header.appHeader > button:hover {
+header.appHeader > .right > button:hover {
   background: rgba(128, 128, 128, 0.1);
+}
+@media screen and (max-width: 700px) {
+  header.appHeader {
+    max-height: 30%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    padding: 10px;
+  }
+  header.appHeader > h1 {
+    width: 100%;
+  }
+  header.appHeader > .chooseImage,
+  header.appHeader > label {
+    margin: 5px 0;
+    flex-grow: 1;
+    flex-basis: 100% !important;
+  }
+  header.appHeader > label > span {
+    min-width: 90px;
+  }
+  header.appHeader > .right {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+  }
 }
 main {
   flex-grow: 1;
