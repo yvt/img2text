@@ -68,6 +68,13 @@ struct Opts {
     /// as edges in the output image.
     #[clap(long = "canny-high-threshold", default_value = "20")]
     edge_canny_high_threshold: f32,
+    /// Apply dithering to preserve the gray shades. Incompatible with
+    /// `-i edge-canny`.
+    #[clap(short = 'd', long = "dither")]
+    dither: bool,
+    /// Choose the contrast enhancing technique to use for dithering.
+    #[clap(long = "dither-contrast", default_value = "median-quant", arg_enum)]
+    dither_contrast: DitherContrast,
 }
 
 #[derive(Clap, Debug)]
@@ -105,6 +112,15 @@ enum InputTy {
     Bow,
     /// Canny edge detection
     EdgeCanny,
+}
+
+#[derive(Clap, Debug)]
+enum DitherContrast {
+    None,
+    /// Quantize color values to the median of the dark or bright pixel set.
+    MedianQuant,
+    /// Apply pre-equalization
+    Equalize,
 }
 
 #[derive(Debug)]
@@ -220,6 +236,10 @@ fn main() -> Result<()> {
         bail!("edge_canny_low_threshold mustn't be greater than edge_canny_high_threshold");
     }
 
+    if opts.dither && opts.input_ty == InputTy::EdgeCanny {
+        bail!("`--dither` and `-i edge-canny` are incompatible");
+    }
+
     // Resize the image to the terminal size if the size is not specified
     let console_stdout = console::Term::stdout();
     if opts.out_size.is_none() && console_stdout.features().is_attended() {
@@ -325,7 +345,7 @@ fn main() -> Result<()> {
         img.pixels().map(|&image::Luma([luma])| luma),
     );
     log::trace!("histogram = {:?}", histogram);
-    let threshold = if let Some(x) = imageops::find_threshold(&histogram) {
+    let mut threshold = if let Some(x) = imageops::find_threshold(&histogram) {
         log::debug!("threshold = {}", x);
         x
     } else {
@@ -381,6 +401,39 @@ fn main() -> Result<()> {
         }
     };
 
+    // Apply dithering.
+    // `-i auto` can imply `-i edge-canny`, in which case just ignore `--dither`.
+    if opts.dither && opts.input_ty != InputTy::EdgeCanny {
+        let mut palette = [0, 255];
+
+        match opts.dither_contrast {
+            DitherContrast::None => {}
+            DitherContrast::MedianQuant => {
+                palette[0] = imageops::median(&histogram[0..threshold]) as u8;
+                palette[1] = (imageops::median(&histogram[threshold..]) + threshold) as u8;
+            }
+            DitherContrast::Equalize => {
+                let mut map = [0; 256];
+                imageops::equalization_map(&mut map, &histogram);
+                log::debug!("equalization map = {:?}", map);
+                for luma in img.iter_mut() {
+                    *luma = map[*luma as usize];
+                }
+                threshold = map[threshold] as usize;
+            }
+        }
+        log::debug!("dithering palette = {:?}", palette);
+        log::debug!("dithering quantization threshold = {:?}", threshold);
+
+        image::imageops::colorops::dither(
+            &mut img,
+            &BlackWhiteColorMap {
+                threshold: threshold as u8,
+                palette,
+            },
+        );
+    }
+
     // Process the image
     use img2text::ImageRead;
     let img_proxy = GrayImageRead {
@@ -425,5 +478,33 @@ impl img2text::ImageRead for GrayImageRead<'_> {
         img2text::set_spans_by_fn(out, self.dims()[0], move |x| {
             (image[(x as u32, y as u32)].0[0] as usize >= threshold) ^ invert
         });
+    }
+}
+
+struct BlackWhiteColorMap {
+    threshold: u8,
+    palette: [u8; 2],
+}
+
+impl image::imageops::colorops::ColorMap for BlackWhiteColorMap {
+    type Color = image::Luma<u8>;
+
+    #[inline]
+    fn index_of(&self, color: &Self::Color) -> usize {
+        (color.0[0] >= self.threshold) as usize
+    }
+
+    #[inline]
+    fn map_color(&self, color: &mut Self::Color) {
+        *color = self.lookup(self.index_of(color)).unwrap();
+    }
+
+    #[inline]
+    fn lookup(&self, index: usize) -> Option<Self::Color> {
+        Some(image::Luma([self.palette[index]]))
+    }
+
+    fn has_lookup(&self) -> bool {
+        true
     }
 }

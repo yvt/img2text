@@ -1,5 +1,6 @@
 use core::ops::AddAssign;
 use num_traits::One;
+use std::unreachable;
 
 pub fn accumulate_histogram<T: One + AddAssign>(
     out: &mut [T],
@@ -64,4 +65,29 @@ pub fn find_threshold(histogram: &[u32]) -> Option<usize> {
         })
         .max_by_key(|(sigma, _threshold)| sigma.to_bits())
         .map(|(_sigma, threshold)| threshold)
+}
+
+pub fn equalization_map(out: &mut [u8; 256], histogram: &[u32; 256]) {
+    let sum: u32 = histogram.iter().sum();
+    let mut partial_sum = 0;
+    if sum == 0 {
+        // avoid zero division
+        return;
+    }
+    for (in_luma, out_luma) in out.iter_mut().enumerate() {
+        *out_luma = (partial_sum * 256 / sum as u64).min(255) as u8;
+        partial_sum += histogram[in_luma] as u64;
+    }
+}
+
+pub fn median(histogram: &[u32]) -> usize {
+    let sum: u32 = histogram.iter().sum();
+    let mut partial_sum = 0;
+    for (i, h) in histogram.iter().enumerate() {
+        partial_sum += *h as u64;
+        if partial_sum * 2 >= sum as u64 {
+            return i;
+        }
+    }
+    unreachable!()
 }

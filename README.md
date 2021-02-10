@@ -29,6 +29,10 @@ ARGS:
             The image to process
 
 FLAGS:
+    -d, --dither
+            Apply dithering to preserve the gray shades. Incompatible with `-i
+            edge-canny`
+
     -h, --help
             Prints help information
 
@@ -40,6 +44,11 @@ OPTIONS:
     -w <cell-width>
             The width of output characters, only used when `-s` is given without
             `!` [default: 0.45]
+
+        --dither-contrast <dither-contrast>
+            Choose the contrast enhancing technique to use for dithering
+            [default: median-quant] [possible values: none, median-quant,
+            equalize]
 
         --canny-high-threshold <edge-canny-high-threshold>
             A parameter for the Canny edge detector (`-i edge-canny`).
