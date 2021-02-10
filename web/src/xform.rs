@@ -4,8 +4,8 @@ use std::{convert::TryInto, future::Future, pin::Pin};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlImageElement};
 
-#[path = "../../src/otsu.rs"]
-mod otsu;
+#[path = "../../src/imageops.rs"]
+mod imageops;
 
 #[derive(PartialEq, Clone)]
 pub struct Opts {
@@ -188,12 +188,12 @@ pub fn worker_kernel(
 
     // Auto-threshold
     let mut histogram = [0; 256];
-    otsu::accumulate_histogram(
+    imageops::accumulate_histogram(
         &mut histogram,
         image.pixels().map(|&image::Luma([luma])| luma),
     );
     log::trace!("histogram = {:?}", histogram);
-    let threshold = if let Some(x) = otsu::find_threshold(&histogram) {
+    let threshold = if let Some(x) = imageops::find_threshold(&histogram) {
         log::debug!("threshold = {}", x);
         x
     } else {

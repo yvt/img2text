@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use clap::{Clap, ValueHint};
 use std::{convert::TryInto, io::prelude::*, path::PathBuf, str::FromStr, unreachable};
 
-mod otsu;
+mod imageops;
 
 #[derive(Clap, Debug)]
 #[clap(long_about = r"
@@ -320,12 +320,12 @@ fn main() -> Result<()> {
 
     // Auto-threshold
     let mut histogram = [0; 256];
-    otsu::accumulate_histogram(
+    imageops::accumulate_histogram(
         &mut histogram,
         img.pixels().map(|&image::Luma([luma])| luma),
     );
     log::trace!("histogram = {:?}", histogram);
-    let threshold = if let Some(x) = otsu::find_threshold(&histogram) {
+    let threshold = if let Some(x) = imageops::find_threshold(&histogram) {
         log::debug!("threshold = {}", x);
         x
     } else {
