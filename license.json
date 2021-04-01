@@ -534,10 +534,10 @@
     "name": "img2text",
     "version": "0.1.0",
     "authors": "yvt <i@yvt.jp>",
-    "repository": null,
+    "repository": "https://github.com/yvt/img2text",
     "license": "Apache-2.0 OR MIT",
     "license_file": null,
-    "description": null
+    "description": "Image-to-text converter"
   },
   {
     "name": "img2text_web",
