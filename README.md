@@ -94,7 +94,7 @@ OPTIONS:
 First, make sure [rustup](https://www.rust-lang.org/tools/install) or Rust 1.49.0 or later is installed. Then run the following command:
 
 ```
-cargo install --git https://github.com/yvt/img2text.git
+cargo install img2text
 ```
 
 This will compile and install `img2text` the CLI app to `~/.cargo/bin` or somewhere else in your system.
@@ -143,8 +143,6 @@ cargo watch -s make -i static
 Add the following to your app's `Cargo.toml` file:
 
 ```toml
-[dependencies.img2text]
-git = "https://github.com/yvt/img2text.git"
-rev = ""  # <--- insert the latest git revision here
-default-features = false
+[dependencies]
+img2text = { version = "0.1.0", default-features = false }
 ```
