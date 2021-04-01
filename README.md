@@ -146,4 +146,5 @@ Add the following to your app's `Cargo.toml` file:
 [dependencies.img2text]
 git = "https://github.com/yvt/img2text.git"
 rev = ""  # <--- insert the latest git revision here
+default-features = false
 ```
