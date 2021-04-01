@@ -10,6 +10,10 @@ version = "0.1.0"
 authors = ["yvt <i@yvt.jp>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
+readme = "README.md"
+description = "Image-to-text converter"
+categories = ["command-line-utilities", "graphics"]
+repository = "https://github.com/yvt/img2text"
 
 [features]
 # Enable the `bin`-only deps to facilitate `cargo install`, at cost of
