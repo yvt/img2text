@@ -23,6 +23,7 @@ futures = { version = "0.3.12" }
 js-sys = { version = "0.3.44" }
 image = { version = "0.23.12", default-features = false }
 serde = { version = "1.0.123" }
+rlsf = { version = "0.1.2 "}
 log = { version = "0.4.14", features = ["release_max_level_off"] }
 yew = { version = "0.17" }
 

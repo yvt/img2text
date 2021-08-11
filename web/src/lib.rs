@@ -4,6 +4,9 @@ use std::unreachable;
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use yew::prelude::*;
 
+#[global_allocator]
+static ALLOC: rlsf::SmallGlobalTlsf = rlsf::SmallGlobalTlsf::INIT;
+
 mod filechoice;
 mod helpview;
 mod imagewell;
