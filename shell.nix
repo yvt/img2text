@@ -14,7 +14,7 @@ let
         sha256 = "1sg64rbv165zmigmjf7xrrlpqibhl13zvlqzkx1n3ribfvhy5lh0";
       };
 
-      cargoSha256 = "10hz6094viyjlkdvhchc41a3m96hlknri8chh9s4nc93h582ps27";
+      cargoSha256 = "kkPQqwxFpez3ffCx0NtL8wipkVTs9tRiLd6T0/6yTJ8=";
     };
 in
 
@@ -27,7 +27,7 @@ runCommand "dummy" rec {
     binaryen
     rustup
     lessc
-    python37Packages.fonttools
-    python37Packages.brotli
+    python3Packages.fonttools
+    python3Packages.brotli
   ];
 } ""
