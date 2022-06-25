@@ -23,7 +23,9 @@ static/FairfaxHD-subfont.ttf: vendor/fairfaxhd/FairfaxHD.ttf.gz src/font-subset.
 	rm -f static/FairfaxHD.ttf
 
 static/license.html: ../Cargo.lock license-template.html
-	cargo-license -j > static/license.json
+	cargo-license -j \
+		| jq 'map(. + {authors: (.authors + "")})' \
+		> static/license.json
 	extrude-licenses --template-file license-template.html --input-file static/license.json \
 		--escape-authors > static/license.html
 	# It's probably not nice to put everyone's e-mail address on a public website

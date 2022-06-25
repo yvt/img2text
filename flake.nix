@@ -41,6 +41,7 @@
                   lessc
                   openssl_1_1
                   libiconv
+                  jq
                   python3Packages.fonttools
                   python3Packages.brotli
                 ])
