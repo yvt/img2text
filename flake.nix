@@ -31,6 +31,7 @@
             nativeBuildInputs =
               (with pkgs;
                 [
+                  pkg-config
                   cargo-license
                   extrude-licenses
                   wasm-pack
@@ -38,6 +39,7 @@
                   binaryen
                   rustup
                   lessc
+                  openssl_1_1
                   python3Packages.fonttools
                   python3Packages.brotli
                 ])
