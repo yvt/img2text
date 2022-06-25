@@ -154,6 +154,7 @@ pub fn max_output_len_for_image_dims(
 }
 
 #[doc(hidden)]
+#[cfg(feature = "log")]
 pub fn adjust_image_size_for_output_size_preserving_aspect_ratio(
     image_dims: [usize; 2],
     output_dims: [usize; 2],
