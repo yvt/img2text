@@ -48,7 +48,7 @@ env_logger = { version = "0.8.1", optional = true }
 imageproc = { version = "0.22.0", optional = true }
 console = { version = "0.13.0", optional = true }
 anyhow = { version = "1.0.34", optional = true }
-clap = { version = "3.0.0-beta.2", features = ["wrap_help"], optional = true }
+clap = { version = "3.2", features = ["derive", "wrap_help"], optional = true }
 log = { version = "0.4.11", optional = true }
 
 [dev-dependencies]

@@ -1,10 +1,10 @@
 use anyhow::{anyhow, bail, Context, Result};
-use clap::{Clap, ValueHint};
+use clap::{Parser, ValueHint};
 use std::{convert::TryInto, io::prelude::*, path::PathBuf, str::FromStr, unreachable};
 
 mod imageops;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(long_about = r"
 Image-to-text converter
 
@@ -27,7 +27,7 @@ struct Opts {
     #[clap(name = "FILE", value_hint = ValueHint::AnyPath)]
     image_path: PathBuf,
     /// The glyph set to use
-    #[clap(short = 'g', default_value = "braille", arg_enum)]
+    #[clap(short = 'g', default_value = "braille", value_enum)]
     style: Style,
     /// The width of output characters, only used when `-s` is given without
     /// `!`
@@ -54,7 +54,7 @@ struct Opts {
     out_size: Option<SizeSpec>,
 
     /// Specifies how to interpret the input image.
-    #[clap(short = 'i', default_value = "auto", arg_enum)]
+    #[clap(short = 'i', default_value = "auto", value_enum)]
     input_ty: InputTy,
     /// A parameter for the Canny edge detector (`-i edge-canny`).
     ///
@@ -73,11 +73,11 @@ struct Opts {
     #[clap(short = 'd', long = "dither")]
     dither: bool,
     /// Choose the contrast enhancing technique to use for dithering.
-    #[clap(long = "dither-contrast", default_value = "median-quant", arg_enum)]
+    #[clap(long = "dither-contrast", default_value = "median-quant", value_enum)]
     dither_contrast: DitherContrast,
 }
 
-#[derive(Clap, Debug)]
+#[derive(clap::ValueEnum, Clone, Debug)]
 enum Style {
     Slc,
     Ms2x3,
@@ -102,7 +102,7 @@ impl Style {
     }
 }
 
-#[derive(Clap, Debug, PartialEq)]
+#[derive(clap::ValueEnum, Clone, Debug, PartialEq)]
 enum InputTy {
     /// Automatic detection
     Auto,
@@ -114,7 +114,7 @@ enum InputTy {
     EdgeCanny,
 }
 
-#[derive(Clap, Debug)]
+#[derive(clap::ValueEnum, Clone, Debug)]
 enum DitherContrast {
     None,
     /// Quantize color values to the median of the dark or bright pixel set.
@@ -198,7 +198,7 @@ fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("img2text=info"))
         .init();
 
-    let mut opts: Opts = Clap::parse();
+    let mut opts = Opts::parse();
     log::debug!("opts = {:#?}", opts);
 
     // Open the image
