@@ -6,7 +6,7 @@ on:
 jobs:
   publish:
     name: Build and publish the website
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
     - name: Checkout
