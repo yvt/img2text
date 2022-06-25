@@ -52,8 +52,8 @@ clap = { version = "3.2", features = ["derive", "wrap_help"], optional = true }
 log = { version = "0.4.11", optional = true }
 
 [dev-dependencies]
-quickcheck_macros = "0.9.1"
-quickcheck = "0.9.2"
+quickcheck_macros = "1"
+quickcheck = "1"
 
 [build-dependencies]
 num-integer = { version = "0.1.42", default-features = false }
