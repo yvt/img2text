@@ -2,11 +2,16 @@
 default: all
 .PHONY: all wasm
 
-all: wasm static/app.css static/FairfaxHD-subfont.ttf static/license.html
+all: wasm static/app.css static/FairfaxHD-subfont.ttf static/license.html static/index.html static/help.html
 
 wasm:
 	wasm-pack build --target no-modules --out-name wasm --out-dir ./static --no-typescript || exit $?
 	rm static/package.json static/.gitignore
+
+static/index.html: src/index.html
+	cp src/index.html static/
+static/help.html: src/help.html
+	cp src/help.html static/
 
 static/app.css: src/lib.less src/imagewell.less src/helpview.less
 	lessc src/lib.less static/app.css || exit $?

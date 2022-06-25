@@ -6,3 +6,4 @@
 /static/*.woff
 /static/*.woff2
 /static/license*
+/static/*.html
