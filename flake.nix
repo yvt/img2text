@@ -40,6 +40,7 @@
                   rustup
                   lessc
                   openssl_1_1
+                  libiconv
                   python3Packages.fonttools
                   python3Packages.brotli
                 ])
