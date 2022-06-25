@@ -120,7 +120,7 @@ Prerequisites:
  - [rustup](https://www.rust-lang.org/tools/install)
  - [lessc](http://lesscss.org)
  - [FontTools](https://github.com/fonttools/fonttools)
- - ... or just use [Nix](https://nixos.org) and the supplied [`shell.nix`](./shell.nix) file to install all of them
+ - ... or just use [Nix](https://nixos.org) and run `nix develop` to install all of them
  - (*Optional*) [`cargo-watch`](https://crates.io/crates/cargo-watch)
 
 ```shell
