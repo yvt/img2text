@@ -1,5 +1,7 @@
 # `img2text`
 
+<a href="https://crates.io/crates/img2text"><img src="https://img.shields.io/crates/v/img2text?style=for-the-badge"></a>
+
 ## `img2text` on Terminal
 
 ```
