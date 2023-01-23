@@ -421,7 +421,7 @@ const GLYPH_SET_1X2: GlyphSetIn = GlyphSetIn {
     const_name: "GLYPH_SET_1X2",
     mask_dims: [1, 2],
     mask_overlap: [0, 0],
-    glyphs: &[("█", 0b1_1), (" ", 0b0_0), ("🬎", 0b1_0), ("🬹", 0b0_1)],
+    glyphs: &[("█", 0b1_1), (" ", 0b0_0), ("▀", 0b1_0), ("▄", 0b0_1)],
 };
 
 const GLYPH_SET_2X2: GlyphSetIn = GlyphSetIn {
