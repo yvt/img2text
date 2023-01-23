@@ -60,3 +60,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH: gh-pages
         FOLDER: static
+        SINGLE_COMMIT: true
